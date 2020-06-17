@@ -1,0 +1,12 @@
+name: population_growth
+title: Population_Growth
+username: njh5464
+account: njh5464
+server: rstudio-connect.tlt.psu.edu
+hostUrl: https://rstudio-connect.tlt.psu.edu:3939/__api__
+appId: 206
+bundleId: 974
+url: https://rstudio-connect.tlt.psu.edu:3939/content/206/
+when: 1592358170.88558
+asMultiple: FALSE
+asStatic: FALSE

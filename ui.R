@@ -1,428 +1,418 @@
+library(boastUtils)
 library(shiny)
-library(RColorBrewer)
-library(ggplot2)
-library(shinyBS)
 library(shinydashboard)
-library(shinycssloaders)
-library(dplyr)
+library(shinyBS)
 
+# App Meta Data----------------------------------------------------------------
+APP_TITLE  <<- "Population Growth Models"
+APP_DESCP  <<- paste(
+  "This app explores how growth rate, carrying capacity, density-independent",
+  "limiting factors, and density-dependent limiting factors, affects the growth",
+  "and variability of a hypothetical population of rabbits."
+)
+# End App Meta Data------------------------------------------------------------
 
-library(shinyWidgets)
-library(shinythemes)
-
-sliderInput3 <- function(inputId, label, min, max, value, step=NULL, from_min, from_max){
-  x <- sliderInput(inputId, label, min, max, value, step, animate=FALSE)
-  x$children[[2]]$attribs <- c(x$children[[2]]$attribs, 
-                               "data-from-min" = from_min, 
-                               "data-from-max" = from_max 
-  )
-  x
-}
-ui <- dashboardPage(
-  
-  dashboardHeader(title = "Population Growth Model",
-                  tags$li(class = "dropdown",
-                          tags$a(href = "https://shinyapps.science.psu.edu/",
-                                 icon("home",lib ="font-awesome"))),
-                  tags$li(class = "dropdown",
-                          actionLink("info",icon("info",class = "myClass"))),
-                  titleWidth = 300),
-  dashboardSidebar(width = 180,
-                   sidebarMenu(id='tabs',
-                               menuItem('Prerequisites', tabName='preq', icon=icon('book')),
-                               menuItem("Overview", tabName = "overview", icon = icon("dashboard")),
-                               menuItem("Explore", tabName = "explore", icon = icon("wpexplorer"))
-                               #menuItem("Exercise", tabName = "exercise", icon = icon("file-alt"))
-                   )
+# Begin UI Definition ----------------------------------------------------------
+dashboardPage(
+  skin = "green",
+  # Header ---------------------------------------------------------------------
+  dashboardHeader(
+    title = "Pop. Growth Model",
+    titleWidth = "250",
+    tags$li(class = "dropdown",
+            actionLink("info", icon("info"))),
+    tags$li(class = "dropdown",
+            tags$a(href = "https://shinyapps.science.psu.edu/",
+                   icon("home")))
   ),
+  # Sidebar --------------------------------------------------------------------
+  dashboardSidebar(
+    width = 250,
+    sidebarMenu(
+      id="tabs",
+      menuItem("Overview", tabName = "overview", icon = icon("tachometer-alt")),
+      menuItem("Prerequisites", tabName="preq", icon=icon("book")),
+      menuItem("Explore", tabName = "explore", icon = icon("wpexplorer")),
+      menuItem("References", tabName = "References", icon = icon("leanpub"))
+    ),
+    tags$div(
+      class = "sidebar-logo",
+      boastUtils::psu_eberly_logo("reversed")
+    )
+  ),
+  # Body -----------------------------------------------------------------------
   dashboardBody(
-    tags$head( 
-      #change all sliders color
-      tags$link(rel = "stylesheet", type = "text/css", href = "Feature.css"),
-      tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-7 .irs-single, .js-irs-7 .irs-bar-edge, .js-irs-7 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-8 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-8 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-9 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-9 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-11 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-12 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-13 .irs-single, .js-irs-13 .irs-bar-edge, .js-irs-13 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-14 .irs-single, .js-irs-14 .irs-bar-edge, .js-irs-14 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-15 .irs-single, .js-irs-15 .irs-bar-edge, .js-irs-15 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-16 .irs-single, .js-irs-16 .irs-bar-edge, .js-irs-16 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-17 .irs-single, .js-irs-17 .irs-bar-edge, .js-irs-17 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-18 .irs-single, .js-irs-18 .irs-bar-edge, .js-irs-18 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-19 .irs-single, .js-irs-19 .irs-bar-edge, .js-irs-19 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-20 .irs-single, .js-irs-20 .irs-bar-edge, .js-irs-20 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-21 .irs-single, .js-irs-21 .irs-bar-edge, .js-irs-21 .irs-bar {background: #3CBAAD}")),
-      tags$style(HTML(".js-irs-22 .irs-single, .js-irs-22 .irs-bar-edge, .js-irs-22 .irs-bar {background: #3CBAAD}")),
-      
-      tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-7 .irs-single, .js-irs-7 .irs-bar-edge, .js-irs-7 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-8 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-8 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-9 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-9 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-11 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-12 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-13 .irs-single, .js-irs-13 .irs-bar-edge, .js-irs-13 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-14 .irs-single, .js-irs-14 .irs-bar-edge, .js-irs-14 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-15 .irs-single, .js-irs-15 .irs-bar-edge, .js-irs-15 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-16 .irs-single, .js-irs-16 .irs-bar-edge, .js-irs-16 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-17 .irs-single, .js-irs-17 .irs-bar-edge, .js-irs-17 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-18 .irs-single, .js-irs-18 .irs-bar-edge, .js-irs-18 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-19 .irs-single, .js-irs-19 .irs-bar-edge, .js-irs-19 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-20 .irs-single, .js-irs-20 .irs-bar-edge, .js-irs-20 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-21 .irs-single, .js-irs-21 .irs-bar-edge, .js-irs-21 .irs-bar {border-color: #3CBAAD}")),
-      tags$style(HTML(".js-irs-22 .irs-single, .js-irs-22 .irs-bar-edge, .js-irs-22 .irs-bar {border-color: #3CBAAD}"))
-      
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css",
+                href = "https://educationshinyappteam.github.io/Style_Guide/theme/boast.css")
     ),
     tabItems(
-      tabItem(tabName = 'preq',
-              
-              h3(strong('Population Growth Background:')),br(),
-              
-              h4(tags$li("Population growth depends on the rate of births and how that compares to the death rate (the difference is called the growth rate).  The exponential growth of a population that results is then tempered by a finite carrying capacity, which is the maximum sustainable population given the resources available in the environment.")),
-              
-              h4(tags$li("In this app we see how random fluctuations or “stochasticity” affects population growth in both the finite and “infinite” capacity situations.")),
-              
-              h4(tags$li("Deterministic models do not account for random fluctuations, so whatever parameters you set for population growth and carrying capacity will result in a pre-determined result.")),
-              
-              h4(tags$li("But reality is not deterministic in nature.  Individuals in a population will vary in how many offspring they have, how long they will live under natural conditions, and whether they will be affected by a disease. Further, the carrying capacity will vary from time to time due to random fluctuations in the weather, in the development of food sources, and the like. ")),
-              
-              h4(tags$li("Population growth in the face of stochasticity can be quite different from the predictions that would be made by a deterministic model.  This is especially true with small populations since a few extra deaths or a few less births happening randomly might wipe out a population altogether.")),
-              
-              
-              br(),
-              div(style = "text-align: center",actionButton("go", "G O !", icon("bolt"), size = "medium",style = 'color: #fff; background-color: #3CBAAD',class="circle grow"))
-              
-              
-              ),
-      tabItem(tabName = "overview",
-              
-              fluidPage(
-                h3(strong("About:")),
-                h4("Explore how growth rate, carrying capacity, variation of the population, density-independent limiting factors, and density-dependent limiting factors, affects a simulated population of rabbits."),br(),
-                h3(strong("Instructions:")),
-                h4(tags$li("Move the sliders around to explore how the different factors change the population growth over time.")),
-                h4(tags$li("Use the checkboxes to add each factor one by one to see the influence of each of those assumptions.")),
-                h4(tags$li("Notice the changes that occur as the factors go from the extremes.")),
-                div(style = "text-align: center",
-                    actionButton("start", "G O !", icon("bolt"), size = "medium",style = 'color: #fff; background-color: #3CBAAD',class="circle grow")),
-                #bsButton("start", "GO", icon("bolt"),size = "large", style = "warning")),
-                br(),
-                h3(strong("Acknowledgements:")),
-                h4("This app was developed and coded by Yutong Wu.")
-                   #tags$a(href = "https://www.nytimes.com/interactive/2016/11/08/us/politics/election-exit-polls.html","Election 2016: Exit Polls.", style = "text-decoration: underline; color: #3CBAAD"),"on July 20, 2017.")
-              )
+      tabItem(
+        # Overview -------------------------------------------------------------
+        tabName = "overview",
+        withMathJax(),
+        h1("Population Growth Models"),
+        p("Explore how growth rate, carrying capacity, variation of the
+          population, density-independent limiting factors, and
+          density-dependent limiting factors, affects a simulated population of
+          rabbits."),
+        h2("Instructions"),
+        tags$ol(
+          tags$li("Review any information in the Prerequisistes as needed."),
+          tags$li("When ready go to the Exploration Tab."),
+          tags$li("Set the initial values for the rabbit population."),
+          tags$li("Pick a model type to explore."),
+          tags$li("Add/remove factors and move the sliders around to explore how
+                  the different factors impact the population growth over time."),
+          tags$li("See how each slider (population parameters and factors)
+                  influence the population model."),
+          tags$li("Notice what happens when the factors go to the extremes.")
+        ),
+        div(
+          style = "text-align: center",
+          bsButton(
+            inputId = "start",
+            label = "GO!",
+            size = "large",
+            icon = icon("bolt"),
+            style = "default"
+          )
+        ),
+        br(),
+        br(),
+        h2("Acknowledgements"),
+        p("This app was originally developed and coded by Yutong Wu. The current
+          version of the app was modified by Neil J. Hatfield.",
+          br(),
+          br(),
+          br(),
+          div(class = "updated", "Last Update: 6/16/2020 by NJH.")
+        )
       ),
-      tabItem(tabName = "explore",
-              
-              navbarPage(
-                tags$style(HTML(" 
-                                .navbar { background-color: white;}
-                                .navbar-default .navbar-nav > li > a {color:black;}
-                                .navbar-default .navbar-nav > .active > a,
-                                .navbar-default .navbar-nav > .active > a:focus,
-                                .navbar-default .navbar-nav > li > a:hover {color: black;background-color:#8ad5cd;text-decoration:underline;}
-                                ")), 
-                tabPanel(strong("Deterministic"),
-                         # Application title
-                         titlePanel("Population Growth in Rabbits"),
-                         
-                         # Sidebar with a slider input for number of bins 
-                         sidebarLayout(
-                           sidebarPanel(
-                             h4(strong("Summary:")),
-                             htmlOutput("inform"),
-                             hr(),
-                             setSliderColor(c("#3CBAAD","#3CBAAD","#3CBAAD","#3CBAAD"),c(1,2,3,4)),
-                             tags$div(title="Click here to set the starting population of rabbits",
-                                      sliderInput3("start_size",
-                                                   "Starting Population Size:",
-                                                   min = 0,
-                                                   max = 100,
-                                                   value = 50,
-                                                   from_min = 1,
-                                                   from_max = 100,
-                                                   step = 5)
-                             ),
-                             sliderInput3("brith_rate",
-                                          "Birth Rate:",
-                                          min = 0,
-                                          max = 1,
-                                          value = 0.5,
-                                          from_min = 0.01,
-                                          from_max = 1,
-                                          step = 0.002),
-                             sliderInput3("death_rate",
-                                          "Death Rate:",
-                                          min = 0,
-                                          max = 1,
-                                          value = 0.3,
-                                          from_min = 0.01,
-                                          from_max = 1,
-                                          step = 0.002),
-                             tags$head(tags$style(HTML('
-                                                       #checkbox :after, #checkbox :before{
-                                                       background-color:#bff442;
-                                }'))),
-                                        
-                             checkboxInput("add_k", "Carrying Capacity", value = FALSE),
-                             uiOutput("kControl")
-                             ),
-                           
-                           # Show a plot of the generated distribution
-                           mainPanel(
-                             plotOutput("deterPlot") %>% withSpinner(color="#3CBAAD"),
-                             bsPopover(id = "deterPlot",
-                                       title =  "Rabbits Population Plot", 
-                                       content = "This plot shows the estimated Rabbits population", 
-                                       trigger = "hover")
-                           ))
-                             ),
-                tabPanel(strong("Infinite Capacity"),
-                         # Application title
-                         titlePanel("Population Growth in Rabbits with Infinite Carrying Capacity"),
-                         sidebarLayout(
-                           sidebarPanel(
-                             h4(strong("Summary:")),
-                             htmlOutput("inform2"),
-                             hr(),
-                             setSliderColor(c("#3CBAAD","#3CBAAD","#3CBAAD","#3CBAAD"),c(1,2,3)),
-                             sliderInput3("start_size2",
-                                          "Starting Population Size:",
-                                          min = 0,
-                                          max = 100,
-                                          value = 50,
-                                          from_min = 1,
-                                          from_max = 100,
-                                          step = 2),
-                             sliderInput3("brith_rate2",
-                                          "Birth Rate:",
-                                          min = 0,
-                                          max = 1,
-                                          value = 0.5,
-                                          from_min = 0.01,
-                                          from_max = 1,
-                                          step = 0.002),
-                             sliderInput3("death_rate2",
-                                          "Death Rate:",
-                                          min = 0.00,
-                                          max = 1,
-                                          value = 0.3,
-                                          from_min = 0.01,
-                                          from_max = 1,
-                                          step = 0.002),
-                             
-                             h4("Density-dependent limiting factors:"),
-                             
-                             checkboxInput("add_disease", "Add Disease", value = FALSE),
-                             uiOutput("disease_exp"),
-                             
-                             hr(),
-                             checkboxInput("expMod", "Estimated Model", value = FALSE)
-                             
-                           ),
-                           mainPanel(
-                             plotOutput("expGrowthPlot") %>% withSpinner(color="#3CBAAD"),
-                             bsPopover(id = "expGrowthPlot",
-                                       title =  "Rabbits Population Plot", 
-                                       content = "This plot shows the simulated Rabbits population with infinite carrying capacity", 
-                                       trigger = "hover")
-                           )
-                           
-                           
-                           
-                         )
-                         
-                         
-                         
-                         
+      tabItem(
+        # Prerequisites --------------------------------------------------------
+        tabName = 'preq',
+        h2("Prerequisites"),
+        tags$ul(
+          tags$li("Population growth depends on the rate of births and how that
+                  compares to the death rate (the difference is called the
+                  growth rate)."),
+          tags$li("The exponential growth of a population results when the
+                  growth rate is positive; the population faces exponential decay
+                  when the growth rate is negative."),
+          tags$li("When there is a finite carrying capacity (i.e., an upper bound on how
+                  many members the environment can support), the expoential growth
+                  changes to logistic growth. This appears as an S-shaped curve."),
+          tags$li('In this app, we see how random fluctuations or "stochasticity"
+                  affects population growth in both the finite and "infinite"
+                  capacity situations.'),
+          tags$li("Deterministic models do not account for random fluctuations,
+                  so whatever parameters you set for population growth and
+                  carrying capacity will result in a pre-determined result."),
+          tags$li("Reality is not deterministic in nature. Individuals in a
+                  population will vary in how many offspring they have, how long
+                  they will live under natural conditions, and whether they will
+                  be affected by a disease. Further, the carrying capacity will
+                  vary from time to time due to random fluctuations in the
+                  weather, in the development of food sources, and the like."),
+          tags$li("Population growth in the face of stochasticity can be quite
+                  different from the predictions that would be made by a
+                  deterministic model. This is especially true with small
+                  populations since a few extra deaths or a few less births
+                  happening randomly might wipe out a population altogether.")
+        ),
+        br(),
+        br(),
+        div(
+          style = "text-align: center",
+          bsButton(
+            inputId = "go",
+            label = "GO!",
+            size = "large",
+            icon = icon("bolt"),
+            style = "default"
+          )
+        )
+      ),
+      tabItem(
+        # Exploration Tab ------------------------------------------------------
+        tabName = "explore",
+        h2("Modeling Rabbit Population Growth"),
+        br(),
+        h3("Step 1: Set Initial Values for the Population"),
+        fluidRow(
+          tags$form(
+            class = "form-inline",
+            column(
+              width = 4,
+              offset = 1,
+              sliderInput(
+                inputId = "initPop",
+                label = "Starting population size",
+                min = 0,
+                max = 100,
+                value = 50,
+                step = 5
+              )
+            ),
+            column(
+              width = 4,
+              offset = 1,
+              sliderInput(
+                inputId = "birthRate",
+                label = "Birth rate",
+                min = 0,
+                max = 1,
+                value = 0.5,
+                step = 0.002
+              )
+            )
+          )
+        ),
+        fluidRow(
+          tags$form(
+            class = "form-inline",
+            column(
+              width = 4,
+              offset = 1,
+              sliderInput(
+                inputId = "obsPeriod",
+                label = "Observation period",
+                min = 24,
+                max = 60,
+                step = 1,
+                value = 24,
+                post = " months"
+              )
+            ),
+            column(
+              width = 4,
+              offset = 1,
+              sliderInput(
+                inputId = "deathRate",
+                label = "Death rate",
+                min = 0,
+                max = 1,
+                value = 0.3,
+                step = 0.002
+            )
+          )
+        )
+      ),
+      br(),
+      htmlOutput("initSummary"),
+      br(),
+      h3("Step 2: Pick a Model to Explore"),
+      ## Inset Tabs ------------------------------------------------------------
+      tabsetPanel(
+        id = "models",
+        type = "tabs",
+        # Deterministic Models Tab ----------------------------------------------
+        tabPanel(
+          title = "Deterministic Models",
+          br(),
+          fluidRow(
+            column(
+              width = 4,
+              wellPanel(
+                h3("Step 3: Add Factors"),
+                checkboxInput(
+                  inputId = "addK1",
+                  label = "Carrying capacity",
+                  value = FALSE
                 ),
-                tabPanel(strong("Finite Capacity"),
-                         # Application title
-                         titlePanel("Population Growth in Rabbits with Finite Carrying Capacity"),
-                         
-                         # Sidebar with a slider input for number of bins 
-                         sidebarLayout(
-                           sidebarPanel(
-                             h4(strong("Summary:")),
-                             htmlOutput("inform3"),
-                             hr(),
-                             fluidRow(
-                               column(6,
-                                      ailgn="center",
-                                      
-                                      sliderInput3("start_size3",
-                                                   "Starting Population Size:",
-                                                   min = 0,
-                                                   max = 100,
-                                                   value = 50,
-                                                   from_min = 1,
-                                                   from_max = 100,
-                                                   step = 5),  
-                                      sliderInput3("brith_rate3",
-                                                   "Birth Rate:",
-                                                   min = 0.00,
-                                                   max = 1,
-                                                   value = 0.5,
-                                                   from_min = 0.01,
-                                                   from_max = 1,
-                                                   step = 0.002),
-                                      
-                                      sliderInput3("death_rate3",
-                                                   "Death Rate:",
-                                                   min = 0.00,
-                                                   max = 1,
-                                                   value = 0.3,
-                                                   from_min = 0.01,
-                                                   from_max = 1,
-                                                   step = 0.002),
-                                      h4("Density-independent limiting factors:"),
-                                      checkboxInput("add_resource", "Add Environmental Factor", value = FALSE),
-                                      uiOutput("resource_added")
-                                      
-                                      
-                                      
-                               ),
-                               column(6,
-                                      ailgn="center",
-                                      sliderInput("k_pop",
-                                                  "Carrying Capacity:",
-                                                  min = 100,
-                                                  max = 20000,
-                                                  value = 10000,
-                                                  step = 10),
-                                      
-                                      sliderInput("var_k_pop",
-                                                  "Variation of Carrying Capacity: (percent)",
-                                                  min = 0,
-                                                  max = 30,
-                                                  value = 0,
-                                                  step = 5),
-                                      
-                                      h4("Density-dependent limiting factors:"),
-                                      
-                                      checkboxInput("add_competition", "Add Competition", value = FALSE),
-                                      tags$div(title="Competitors have same birthrate as rabbits.",
-                                               uiOutput("competition_added")),
-                                      
-                                      
-                                      checkboxInput("add_disease_log", "Add Disease", value = FALSE),
-                                      uiOutput("disease_added_log")
-                                      
-                                      #checkboxInput("logMod", "Estimated Model", value = FALSE)
-                                      
-                               )
-                             )
-                             
-                             ,width = 5),
-                           
-                           # Show a plot of the generated distribution
-                           mainPanel(
-                             plotOutput("logGrowthPlot") %>% withSpinner(color="#3CBAAD"),
-                             bsPopover(id = "logGrowthPlot",
-                                       title =  "Rabbits Population Plot", 
-                                       content = "This plot shows the simulated Rabbits population with finite carrying capacity", 
-                                       trigger = "hover"),
-                             tags$style(type="text/css",
-                                        ".shiny-output-error { visibility: hidden; }",
-                                        ".shiny-output-error:before { visibility: hidden; }")
-                             ,width = 7))
-                )
-                
-                
-                
-                
-                
-                
-                )
-              
-              
-                )
-      # tabItem(tabName = "exercise",
-      #         fluidPage( # Application title
-      #           titlePanel("Lobster Fishery Management"),
-      #           
-      #           fluidRow(
-      #             column(2, 
-      #                    # Sidebar with a slider input for number of bins
-      #                    #style = "display:flex; align-items:flex-start",
-      #                    # wellPanel(#sidebar panel
-      #                    #style = "overflow-y: auto; position:fixed; width:300px; top:0; bottom:0",
-      #                    #br(),
-      #                    
-      #                    #sliders for control
-      #                    h4(strong("Legal Restrictions:")),
-      #                    tags$div(title="The minimum landing size (MLS) is the smallest fish measurement at which it is legal to keep or sell a fish. What the MLS is depends on the species of fish. Sizes also vary around the world, as they are legal definitions which are defined by the local regulatory authority. Commercial trawl and seine fisheries can control the size of their catch by adjusting the mesh size of their nets.",
-      #                             sliderInput("limit_1",
-      #                                         "Provision of Minimum Landing Size (CL,mm):",
-      #                                         min = 80,
-      #                                         max = 140,
-      #                                         value = 82,
-      #                                         step = 5)),
-      #                    tags$div(title="Commercial fishing regulators in the United States, such as the Atlantic States Marine Fisheries Commission and the National Marine Fisheries Service, enforce restrictions through the use of lobster fishing licenses and lobster pot tags that correspond to the fisher's permit number. Tag manufacturers also maintain databases for each state's licensed fisheries, tracking how many tags each fisher purchases every year.",
-      #                             sliderInput3("limit_2",
-      #                                          "Commercial Lobster Licenses :",
-      #                                          min = 0,
-      #                                          max = 10000,
-      #                                          value = 4000,
-      #                                          from_min = 100,
-      #                                          from_max = 10000,
-      #                                          step = 100)),
-      #                    h4(strong("Fishing:")),
-      #                    tags$div(title="The legal minimum length is 3 1/4 inches. Lobsters under this length are call “shorts” or “snappers” and must be thrown back into the ocean. The maximum legal length of a lobster is 5 inches carapace-length; which are called “jumbos”. The maximum size limit is regulated to protect the breeding stock.",         
-      #                             sliderInput("fishing",
-      #                                         "Number of Traps(thousands):",
-      #                                         min = 40,
-      #                                         max = 80,
-      #                                         value = 40,
-      #                                         step = 5)),
-      #                    h4(strong("Natural Factor:")),
-      #                    sliderInput("Temp",
-      #                                "Food/Temperature:",
-      #                                min = 0,
-      #                                max = 100,
-      #                                value = 0,
-      #                                step = 5)
-      #                    
-      #             ),
-      #             column(6, # Show a plot of the generated distribution
-      #                    plotOutput("lobster_pop") %>% withSpinner(color="#3CBAAD"),
-      #                    bsPopover(id = "lobster_pop",
-      #                              title =  "Lobster Population", 
-      #                              content = "This plot shows the simulated Lobster population from 1981 to 2013", 
-      #                              trigger = "hover")
-      #             ),
-      #             column(4,
-      #                    h3(strong("Challenge")),
-      #                    box(background = "olive",  width = 400, height = 210,
-      #                        shiny::tags$style(shiny::HTML(
-      #                          "#text { font-size: 17px; height: 200px; overflow: auto; }"
-      #                        )),
-      #                        div(id = "text", paste("The American lobster fishery is one of the most valuable fisheries along the Atlantic coast.  In 2017, 136.7 million pounds of lobster were landed coastwide, representing a $566.4 million ex-vessel value. The vast majority of these landings came from the Gulf of Maine/Georges Bank (GOM/GBK), where the stock is at record high abundance. In contrast, there has been an overall decrease in the percentage of landings from the Southern New England stock, which is depleted and experiencing recruitment failure.
-      #                                      Total U.S. landings in the fishery have steadily increased in the past 35 years. Between 1950 and 1975, landings were fairly stable around 30 million pounds; however, from 1976 – 2008 the average coastwide landings tripled, reaching 92 million pounds in 2006. Since then, landings have continued to increase, reaching 117 million pounds in 2010 and peaking at 158 million pounds in 2016."
-      #                        ))
-      #                    )
-      #             ))
-      #           
-      #         )
-      # )
-      
+                uiOutput("kControl")
               )
-    
-    
+            ),
+            column(
+              width = 8,
+              plotOutput("deterPlot"),
+              tags$script(HTML(
+                "#(document).ready(function() {
+                document.getElementById('deterPlot').setAttribute('aria-label',
+                'The plot shows the exponential growth of the population when
+                the birth rate is larger than the death rate. When there is a
+                carrying capacity, the plot will show a S-curve that increases
+                towards the capacity.')
+                })"
+              )),
+              bsPopover(
+                id = "deterPlot",
+                title =  "Rabbits Population Plot",
+                content = "This plot shows the estimated rabbit population",
+                placement = "top"
+              )
+            )
+          )
+        ),
+        # Infinite Capacity Stochastic Model Tab -------------------------------
+        tabPanel(
+          title = "Infinite Capacity Model",
+          br(),
+          fluidRow(
+            column(
+              width = 4,
+              wellPanel(
+                h3("Step 3: Add Factors"),
+                p("Density-dependent limiting factors"),
+                checkboxInput(
+                  inputId = "addDisease1",
+                  label = "Add disease",
+                  value = FALSE
+                ),
+                uiOutput("diseaseSlider1"),
+                hr(),
+                checkboxInput(
+                  inputId = "expMod",
+                  label = "Show estimated deterministic model",
+                  value = FALSE)
+              )
+            ),
+            column(
+              width = 8,
+              plotOutput("infCapPlot"),
+              tags$script(HTML(
+                "#(document).ready(function() {
+                document.getElementById('infCapPlot').setAttribute('aria-label',
+                'This plot will show the exponential growth of the rabbit
+                population when the birth rate is larger than the death rate.
+                When a disease is added, the death rate increases. There is
+                randomness (stochasticity) in the graph. A deterministic
+                exponetial plot may be added to highlight that reality is
+                typically stochastic.')
+                })"
+              )),
+              bsPopover(
+                id = "infCapPlot",
+                title =  "Rabbits Population Plot",
+                content = "This plot shows the estimated rabbit population",
+                placement = "top"
+              )
+            )
+          )
+        ),
+        # Finite Capacity Stochastic Model Tab ---------------------------------
+        tabPanel(
+          title = "Finite Capacity Model",
+          br(),
+          fluidRow(
+            column(
+              width = 4,
+              wellPanel(
+                h3("Step 3: Add Factors"),
+                sliderInput(
+                  inputId = "kSlider2",
+                  label = "Carrying capacity",
+                  min = 500,
+                  max = 10000,
+                  step = 10,
+                  value = 5000
+                ),
+                sliderInput(
+                  inputId = "cv",
+                  label = "Carrying capacity variation",
+                  min = 0,
+                  max = 30,
+                  step = 5,
+                  value = 0,
+                  post = "%"
+                ),
+                tags$hr(),
+                p("Density-independent limiting factors"),
+                checkboxInput(
+                  inputId = "addResource",
+                  label = "Add environmental factor",
+                  value = FALSE
+                ),
+                uiOutput("resourceSlider"),
+                tags$hr(),
+                p("Density-dependent limiting factors"),
+                checkboxInput(
+                  inputId = "addCompetition",
+                  label = "Add competition",
+                  value = FALSE
+                ),
+                uiOutput("competitionSlider"),
+                br(),
+                checkboxInput(
+                  inputId = "addDisease2",
+                  label = "Add disease",
+                  value = FALSE
+                ),
+                uiOutput("diseaseSlider2")
+              )
+            ),
+            column(
+              width = 8,
+              plotOutput("finCapPlot"),
+              tags$script(HTML(
+                "#(document).ready(function() {
+                document.getElementById('finCapPlot').setAttribute('aria-label',
+                'In this plot there is a dashed line for the theoretical
+                carrying capacity but also a line showing an actual carrying
+                capacity that has a yearly seasonal trend and randomness. The
+                plots for the rabbits and hares (the competition) are both
+                logistic (s-curves), increasing towards the capacity, when the
+                birth rate is greater than the death rate (i.e., growth rate is
+                positive). A deterministic model may be added to highlight the
+                presence of randomness in real life.')
+                })"
+              )),
+              bsPopover(id = "finCapPlot",
+                        title =  "Rabbits Population Plot",
+                        content = "This plot shows the estimated rabbit population",
+                        placement = "top"
+              )
+            )
+          )
+        )
       )
-              )
+    ),
+    tabItem(
+      tabName = "References",
+      withMathJax(),
+      h2("References"),
+      p(
+        class = "hangingindent",
+        "Bailey, E. (2015), shinyBS: Twitter bootstrap components for shiny,
+            R package. Available from https://CRAN.R-project.org/package=shinyBS"
+      ),
+      p(
+        class = "hangingindent",
+        "Carey, R. (2019), boastUtils: BOAST Utilities, R Package.
+            Available from https://github.com/EducationShinyAppTeam/boastUtils"
+      ),
+      p(
+        class = "hangingindent",
+        "Chang, W. and Borges Ribeio, B. (2018), shinydashboard: Create
+            dashboards with 'Shiny', R Package. Available from
+            https://CRAN.R-project.org/package=shinydashboard"
+      ),
+      p(
+        class = "hangingindent",
+        "Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J.
+            (2019), shiny: Web application framework for R, R Package,
+            Available from https://CRAN.R-project.org/package=shiny"
+      ),
+      p(
+        class = "hangingindent",
+        "Perrier, V., Meyer, F., and Granjon, D. (2020), shinyWidgets: Custom
+        inputs widgets for shiny, R Package, Available from
+        https://CRAN.R-project.org/package=shinyWidgets"
+      ),
+      p(
+        class = "hangingindent",
+        "Wickham, H. (2016), ggplot2: Elegant graphics for data analysis,
+            R Package, Springer-Verlag New York. Available from
+            https://ggplot2.tidyverse.org"
+      ),
+      p(
+        class = "hangingindent",
+        "Wickham, H., François, R., Henry, L., and Müller, K. (2020),
+        dplyr: A grammar of data manipulation, R Package, Available from
+        https://CRAN.R-project.org/package=dplyr"
+      )
+    )
+  )
+)
+)
