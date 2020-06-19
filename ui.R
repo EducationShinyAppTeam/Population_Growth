@@ -81,12 +81,14 @@ dashboardPage(
         br(),
         br(),
         h2("Acknowledgements"),
-        p("This app was originally developed and coded by Yutong Wu. The current
-          version of the app was modified by Neil J. Hatfield.",
+        p("This app was originally developed and coded by Yutong Wu. We would
+          to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
+          Sciences for his advice and assistance for the biological content. The
+          currentversion of the app was modified by Neil J. Hatfield.",
           br(),
           br(),
           br(),
-          div(class = "updated", "Last Update: 6/16/2020 by NJH.")
+          div(class = "updated", "Last Update: 6/19/2020 by NJH.")
         )
       ),
       tabItem(
