@@ -100,9 +100,10 @@ dashboardPage(
           tags$li("The exponential growth of a population results when the
                   growth rate is positive; the population faces exponential decay
                   when the growth rate is negative."),
-          tags$li("When there is a finite carrying capacity (i.e., an upper bound on how
-                  many members the environment can support), the expoential growth
-                  changes to logistic growth. This appears as an S-shaped curve."),
+          tags$li("When there is a finite carrying capacity (i.e., an upper bound
+                  on how many members the environment can support), the
+                  exponential growth changes to logistic growth. This appears as
+                  an S-shaped curve."),
           tags$li('In this app, we see how random fluctuations or "stochasticity"
                   affects population growth in both the finite and "infinite"
                   capacity situations.'),

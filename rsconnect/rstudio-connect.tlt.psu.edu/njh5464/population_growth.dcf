@@ -5,8 +5,8 @@ account: njh5464
 server: rstudio-connect.tlt.psu.edu
 hostUrl: https://rstudio-connect.tlt.psu.edu:3939/__api__
 appId: 206
-bundleId: 974
+bundleId: 996
 url: https://rstudio-connect.tlt.psu.edu:3939/content/206/
-when: 1592358170.88558
+when: 1592574302.50198
 asMultiple: FALSE
 asStatic: FALSE

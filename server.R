@@ -8,6 +8,8 @@ calcPop <- function(cap, init, rate, time) {
   floor((cap * init) / (init + (cap - init) * exp(-1 * rate * time)))
 }
 
+wrapText <- function(txt, ...) {paste(strwrap(txt, ...), collapse = "\n")}
+
 boastPalette <- c("#0072B2","#D55E00","#009E73","#CE77A8",
                   "#000000","#E69F00","#999999","#56B4E9","#CC79A7")
 
@@ -310,7 +312,7 @@ shinyServer(function(input, output,session) {
                          input$cv / 100 * input$kSlider2),
                   (input$obsPeriod + 1))
     )
-    graphTitle3 <- "finite capacity model" # Placeholder title
+    graphTitle3 <- "Stochatic Finite Capacity Model" # Placeholder title
 
     #### Create seasonal and stochastic capacity -------------------------------
     finCapData <- finCapData %>%
@@ -370,14 +372,15 @@ shinyServer(function(input, output,session) {
                  rpois(n = 1, lambda = finCapData[i-1, "hare"] * hareDeath),
                  0)
       )
-      if(finCapData[i, "hare"] < 0) {finCapData[i, "hare"] <- 0}
+      if(finCapData[i, "hare"] < 0 || is.na(finCapData[i, "hare"]))
+        {finCapData[i, "hare"] <- 0}
 
-      # Capacity Check ----
+      #### Capacity Check ----
       if(finCapData[i, "rabbit"] + finCapData[i, "hare"] >
          finCapData[i, "capacity"]) {
         finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
-          ifelse(finCapData[i, "hare"] == 0,
-                 finCapData[i, "rabbit"] - finCapData[i, "capacity"],
+          ifelse(finCapData[i, "hare"] <= 10,
+                 (finCapData[i, "rabbit"] - finCapData[i, "capacity"]),
                  ceiling((finCapData[i, "rabbit"] +
                             finCapData[i, "hare"] - finCapData[i, "capacity"]) / 2))
         finCapData[i, "hare"] <- finCapData[i, "hare"] -
@@ -386,6 +389,19 @@ shinyServer(function(input, output,session) {
                  floor((finCapData[i, "rabbit"] +
                             finCapData[i, "hare"] - finCapData[i, "capacity"]) / 2))
       }
+
+      #### Secondary capacity check ----
+      #### Rabbit population tends to "run away", almost ignoring capacity
+      if(finCapData[i, "rabbit"] > finCapData[i, "capacity"]) {
+        finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
+          rpois(n = 1,
+                lambda = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]) *
+                  input$deathRate * runif(1, min = 2, max = 4))
+      }
+
+      #### Negative value check ----
+      if(finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
+      if(finCapData[i, "hare"] < 0) {finCapData[i, "hare"] <- 0}
     }
     if(!(input$addCompetition)) {finCapData[1, "hare"] <- 0}
 
@@ -407,8 +423,8 @@ shinyServer(function(input, output,session) {
         color = boastPalette[5],
         size = 1
       ) +
-      ggplot2::annotate(geom = "text", x = 10, y = 1.05 * input$kSlider2,
-                        label = "Theoretical Capacity",
+      ggplot2::annotate(geom = "text", x = 7.5, y = 1.15 * input$kSlider2,
+                        label = wrapText("Theoretical Expected Capacity", width = 5),
                         color = boastPalette[5],
                         size = 5) +
       ggplot2::geom_point(mapping = aes(y = capacity, color = "Actual Capacity")) +
