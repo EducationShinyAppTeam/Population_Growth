@@ -82,7 +82,7 @@ dashboardPage(
         br(),
         h2("Acknowledgements"),
         p("This app was originally developed and coded by Yutong Wu. We would
-          to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
+          like to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
           Sciences for his advice and assistance for the biological content. The
           currentversion of the app was modified by Neil J. Hatfield.",
           br(),
@@ -414,7 +414,11 @@ dashboardPage(
         "Wickham, H., François, R., Henry, L., and Müller, K. (2020),
         dplyr: A grammar of data manipulation, R Package, Available from
         https://CRAN.R-project.org/package=dplyr"
-      )
+      ),
+      br(),
+      br(),
+      br(),
+      boastUtils::copyrightInfo()
     )
   )
 )

@@ -227,7 +227,8 @@ shinyServer(function(input, output,session) {
     ### Add estimated deterministic model --------------------------------------
     if (input$expMod) {
       g2 <- g2 + ggplot2::geom_line(stat = "function",
-                  fun = function(x) floor(input$initPop * exp((input$birthRate - input$deathRate) * x)),
+                  fun = function(x) {floor(input$initPop *
+                                      exp((input$birthRate - modDeathRate1) * x))},
                   mapping = aes(color="Deterministic"),
                   linetype = "dashed",
                   inherit.aes = F,
