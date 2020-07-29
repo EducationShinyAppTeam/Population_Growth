@@ -4,16 +4,30 @@ library(shinyWidgets)
 library(dplyr)
 
 # Helper Functions -------------------------------------------------------------
-calcPop <- function(cap, init, rate, time) {
+calcPop <- function(cap, init, bRate, dRate1, dRate2, time, date) {
+  if (is.null(date)) {
+    rate = bRate - dRate1
+  } else {
+    rate = ifelse(time <= date, bRate - dRate1, bRate - dRate2)
+  }
   floor((cap * init) / (init + (cap - init) * exp(-1 * rate * time)))
+}
+
+detPop <- function(init, bRate, dRate1, dRate2, date, time) {
+  if(is.null(date)) {
+    rate = bRate - dRate1
+  } else {
+    rate = ifelse(time <= date, bRate - dRate1, bRate - dRate2)
+  }
+  floor(init * exp(rate * time))
 }
 
 wrapText <- function(txt, ...) {paste(strwrap(txt, ...), collapse = "\n")}
 
 boastPalette <- c("#0072B2","#D55E00","#009E73","#CE77A8",
                   "#000000","#E69F00","#999999","#56B4E9","#CC79A7")
-
-shinyServer(function(input, output,session) {
+# Server Call ----
+shinyServer(function(input, output, session) {
   # Set up the header info button ----------------------------------------------
   observeEvent(input$info, {
     sendSweetAlert(
@@ -27,10 +41,10 @@ shinyServer(function(input, output,session) {
 
   # Define the actions of the buttons ------------------------------------------
   observeEvent(input$go, {
-    updateTabItems(session,"tabs","explore")
+    updateTabItems(session, "tabs", "explore")
   })
   observeEvent(input$start, {
-    updateTabItems(session,"tabs","explore")
+    updateTabItems(session, "tabs", "explore")
   })
 
   # Create the summary sentence for initial population settings ----------------
@@ -226,13 +240,18 @@ shinyServer(function(input, output,session) {
 
     ### Add estimated deterministic model --------------------------------------
     if (input$expMod) {
-      g2 <- g2 + ggplot2::geom_line(stat = "function",
-                  fun = function(x) {floor(input$initPop *
-                                      exp((input$birthRate - modDeathRate1) * x))},
-                  mapping = aes(color="Deterministic"),
-                  linetype = "dashed",
-                  inherit.aes = F,
-                  size = 1
+      g2 <- g2 + ggplot2::geom_line(
+        stat = "function",
+        fun = detPop,
+        args = list(init = input$initPop,
+                    bRate = input$birthRate,
+                    dRate1 = input$deathRate,
+                    dRate2 = modDeathRate1,
+                    date = input$date1),
+        mapping = aes(color="Deterministic"),
+        linetype = "dashed",
+        inherit.aes = F,
+        size = 1
       )
     }
     return(g2)
@@ -313,7 +332,7 @@ shinyServer(function(input, output,session) {
                          input$cv / 100 * input$kSlider2),
                   (input$obsPeriod + 1))
     )
-    graphTitle3 <- "Stochatic Finite Capacity Model" # Placeholder title
+    graphTitle3 <- "Stochastic Finite Capacity Model" # Placeholder title
 
     #### Create seasonal and stochastic capacity -------------------------------
     finCapData <- finCapData %>%
@@ -345,10 +364,10 @@ shinyServer(function(input, output,session) {
       ##### Rabbits ----
       finCapData[i, "rabbit"] <- (calcPop(cap = finCapData[i, "capacity"],
                                           init = input$initPop,
-                                          rate = input$birthRate - ifelse(
-                                            i <= input$date2 || is.null(input$date2),
-                                            input$deathRate,
-                                            modDeathRate2),
+                                          bRate = input$birthRate,
+                                          dRate1 = input$deathRate,
+                                          dRate2 = modDeathRate2,
+                                          date = input$date2,
                                           time = finCapData[i, "month"]) +
         rpois(n = 1, lambda = finCapData[i-1, "rabbit"] * input$birthRate) -
         rpois(n = 1, lambda = finCapData[i-1, "rabbit"] *
@@ -359,13 +378,20 @@ shinyServer(function(input, output,session) {
       if(finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
       ##### Hares ----
       finCapData[i, "hare"] <- (calcPop(cap = finCapData[i, "capacity"],
-                                         init = ifelse(!(input$addCompetition),
-                                                       0,
-                                                       input$initPop),
-                                         rate = ifelse(is.null(input$competition),
-                                                       0,
-                                                       input$competition),
-                                           time = finCapData[i, "month"]) +
+                                        init = ifelse(!(input$addCompetition),
+                                                      0,
+                                                      input$initPop),
+                                        bRate = ifelse(is.null(input$competition),
+                                                      0,
+                                                      input$birthRate),
+                                        dRate1 = ifelse(is.null(input$competition),
+                                                        0,
+                                                        (input$birthRate - input$competition)),
+                                        dRate2 = ifelse(is.null(input$competition),
+                                                        0,
+                                                        (input$birthRate - input$competition)),
+                                        date = 0,
+                                        time = finCapData[i, "month"]) +
           ifelse(input$addCompetition,
                  rpois(n = 1, lambda = finCapData[i-1, "hare"] * input$birthRate),
                  0) -
@@ -376,7 +402,7 @@ shinyServer(function(input, output,session) {
       if(finCapData[i, "hare"] < 0 || is.na(finCapData[i, "hare"]))
         {finCapData[i, "hare"] <- 0}
 
-      #### Capacity Check ----
+      #### First Capacity Check ----
       if(finCapData[i, "rabbit"] + finCapData[i, "hare"] >
          finCapData[i, "capacity"]) {
         finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
@@ -392,13 +418,19 @@ shinyServer(function(input, output,session) {
       }
 
       #### Secondary capacity check ----
-      #### Rabbit population tends to "run away", almost ignoring capacity
+      #### Populations tend to "run away", ignoring capacity
+      if(finCapData[i, "hare"] > finCapData[i, "capacity"]) {
+        finCapData[i, "hare"] <- finCapData[i, "hare"] - runif(1, min = 0.75,
+                                                               max = 1.2) *
+          (finCapData[i, "hare"] - finCapData[i, "capacity"])
+      }
       if(finCapData[i, "rabbit"] > finCapData[i, "capacity"]) {
         finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
           rpois(n = 1,
                 lambda = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]) *
                   input$deathRate * runif(1, min = 2, max = 4))
       }
+
 
       #### Negative value check ----
       if(finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
@@ -424,10 +456,6 @@ shinyServer(function(input, output,session) {
         color = boastPalette[5],
         size = 1
       ) +
-      ggplot2::annotate(geom = "text", x = 7.5, y = 1.15 * input$kSlider2,
-                        label = wrapText("Theoretical Expected Capacity", width = 5),
-                        color = boastPalette[5],
-                        size = 5) +
       ggplot2::geom_point(mapping = aes(y = capacity, color = "Actual Capacity")) +
       ggplot2::geom_line(mapping = aes(y = capacity, color = "Actual Capacity")) +
       ggplot2::scale_x_continuous(expand = expansion(mult = 0, add = c(0, 1.1))) +
@@ -453,7 +481,10 @@ shinyServer(function(input, output,session) {
                          fun = calcPop,
                          args = list(cap = input$kSlider2,
                                      init = input$initPop,
-                                     rate = input$birthRate - input$deathRate),
+                                     bRate = input$birthRate,
+                                     dRate1 = input$deathRate,
+                                     dRate2 = modDeathRate2,
+                                     date = input$date2),
                          mapping = aes(color = "Deterministic"),
                          linetype = "dashed",
                          inherit.aes = F,

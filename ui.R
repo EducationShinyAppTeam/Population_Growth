@@ -84,11 +84,11 @@ dashboardPage(
         p("This app was originally developed and coded by Yutong Wu. We would
           like to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
           Sciences for his advice and assistance for the biological content. The
-          currentversion of the app was modified by Neil J. Hatfield.",
+          current version of the app was modified by Neil J. Hatfield.",
           br(),
           br(),
           br(),
-          div(class = "updated", "Last Update: 6/19/2020 by NJH.")
+          div(class = "updated", "Last Update: 7/29/2020 by NJH.")
         )
       ),
       tabItem(
@@ -231,12 +231,12 @@ dashboardPage(
               width = 8,
               plotOutput("deterPlot"),
               tags$script(HTML(
-                "#(document).ready(function() {
+                "$(document).ready(function() {
                 document.getElementById('deterPlot').setAttribute('aria-label',
-                'The plot shows the exponential growth of the population when
+                `The plot shows the exponential growth of the population when
                 the birth rate is larger than the death rate. When there is a
                 carrying capacity, the plot will show a S-curve that increases
-                towards the capacity.')
+                towards the capacity.`)
                 })"
               )),
               bsPopover(
@@ -275,14 +275,14 @@ dashboardPage(
               width = 8,
               plotOutput("infCapPlot"),
               tags$script(HTML(
-                "#(document).ready(function() {
+                "$(document).ready(function() {
                 document.getElementById('infCapPlot').setAttribute('aria-label',
-                'This plot will show the exponential growth of the rabbit
+                `This plot will show the exponential growth of the rabbit
                 population when the birth rate is larger than the death rate.
                 When a disease is added, the death rate increases. There is
                 randomness (stochasticity) in the graph. A deterministic
                 exponetial plot may be added to highlight that reality is
-                typically stochastic.')
+                typically stochastic.`)
                 })"
               )),
               bsPopover(
@@ -349,16 +349,16 @@ dashboardPage(
               width = 8,
               plotOutput("finCapPlot"),
               tags$script(HTML(
-                "#(document).ready(function() {
+                "$(document).ready(function() {
                 document.getElementById('finCapPlot').setAttribute('aria-label',
-                'In this plot there is a dashed line for the theoretical
+                `In this plot there is a dashed line for the theoretical
                 carrying capacity but also a line showing an actual carrying
                 capacity that has a yearly seasonal trend and randomness. The
                 plots for the rabbits and hares (the competition) are both
                 logistic (s-curves), increasing towards the capacity, when the
                 birth rate is greater than the death rate (i.e., growth rate is
                 positive). A deterministic model may be added to highlight the
-                presence of randomness in real life.')
+                presence of randomness in real life.`)
                 })"
               )),
               bsPopover(id = "finCapPlot",
@@ -366,7 +366,9 @@ dashboardPage(
                         content = "This plot shows the estimated rabbit population",
                         placement = "top"
               )
-            )
+            ),
+            p("The dashed horizontal line denotes the theoretical, expected
+              capacity.")
           )
         )
       )
