@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 Population_Growth.Rproj
+*.dcf
+rsconnect/
