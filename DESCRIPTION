@@ -1,0 +1,22 @@
+Title: Population Growth Models
+ShortName: Pop. Growth
+Date: 2019-08-01
+Lifecycle: experimental
+Authors@R: c(
+    person(given = "Yutong", family = "Wu", role = c("aut", "cre")),
+    person(given = "Stephen", family = "Schaeffer", role = c("fnd")),
+    person(given = "Dennis", family = "Pearl", role = c("aut")),
+    person(given = "Neil", family = "Hatfield", email = "neil.hatfield@psu.edu", role = c("aut"))
+  )
+Chapter: Biology Applications
+Description: This app allows for the exploration of growth rate, carrying capacity, and limiting factors impact a population's growth.
+LearningObjectives: c(
+    "The student will learn to explore the differences in deterministic and stochastic growth models.",
+    "The student will learn to expore how different factors influence population growth."
+  )
+DisplayMode: Normal
+URL: https://psu-eberly.shinyapps.io/Population_Growth
+BugReports: https://github.com/EducationShinyAppTeam/Population_Growth/issues
+License: CC-BY-NC-SA-4.0
+Tags: simulation
+Type: Shiny
