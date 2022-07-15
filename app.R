@@ -34,7 +34,7 @@ ui <- list(
     skin = "green",
     ## Header ----
     dashboardHeader(
-      title = "Pop. Growth", 
+      title = "Population Growth", 
       titleWidth = 250,
       tags$li(class = "dropdown", actionLink("info", icon("info"))),
       tags$li(
@@ -141,7 +141,8 @@ ui <- list(
                   they will live under natural conditions, and whether they will
                   be affected by a disease. Further, the carrying capacity will
                   vary from time to time due to random fluctuations in the
-                  weather, in the development of food sources, and the like."),
+                  weather, in the development of food sources, seasonal effects,
+                  and other types of impacts."),
             tags$li("Population growth in the face of stochasticity can be quite
                   different from the predictions that would be made by a
                   deterministic model. This is especially true with small
@@ -252,13 +253,7 @@ ui <- list(
                 ),
                 column(
                   width = 8,
-                  plotOutput("deterPlot"),
-                bsPopover(
-                  id = "deterPlot",
-                  title =  "Rabbits Population Plot",
-                  content = "This plot shows the estimated rabbit population",
-                  placement = "top"
-                )
+                  plotOutput("deterPlot")
                 )
               )
             ),
@@ -287,13 +282,7 @@ ui <- list(
                 ),
                 column(
                   width = 8,
-                  plotOutput("infCapPlot"),
-                bsPopover(
-                  id = "infCapPlot",
-                  title =  "Rabbits Population Plot",
-                  content = "This plot shows the estimated rabbit population",
-                  placement = "top"
-                )
+                  plotOutput("infCapPlot")
                 )
               )
             ),
@@ -307,7 +296,7 @@ ui <- list(
                   wellPanel(
                     h3("Step 3: Add Factors"),
                     sliderInput(
-                      inputId = "kSlider2",
+                      inputId = "capacity2",
                       label = "Carrying capacity",
                       min = 500,
                       max = 10000,
@@ -315,7 +304,7 @@ ui <- list(
                       value = 5000
                     ),
                     sliderInput(
-                      inputId = "cv",
+                      inputId = "capacityVariation",
                       label = "Carrying capacity variation",
                       min = 0,
                       max = 30,
@@ -350,12 +339,7 @@ ui <- list(
                 ),
                 column(
                   width = 8,
-                  plotOutput("finCapPlot"),
-                bsPopover(id = "finCapPlot",
-                          title =  "Rabbits Population Plot",
-                          content = "This plot shows the estimated rabbit population",
-                          placement = "top"
-                )
+                  plotOutput("finCapPlot")
                 ),
                 p("The dashed horizontal line denotes the theoretical, expected
               capacity.")
@@ -464,7 +448,7 @@ server <- function(input, output, session) {
   ## Summary sentence for initial population settings ----
   output$initSummary <- renderText({
     paste0("We are starting with a grassland environment with ", input$initPop,
-           " rabbits. The growth rate is ", 
+           " rabbits. The growth rate (birth rate - death rate) is ", 
            round((input$birthRate - input$deathRate), 3)*100,
            "% per month, and we will observe the population for ", 
            input$obsPeriod, " months.")
@@ -475,7 +459,7 @@ server <- function(input, output, session) {
   output$kControl <- renderUI({
     if (input$addK1) {
       sliderInput(
-        inputId = "kSlider1",
+        inputId = "capacity1",
         label = "Carrying capacity",
         min = 500,
         max = 9000,
@@ -502,7 +486,7 @@ server <- function(input, output, session) {
         test = input$addK1, 
         yes = { # carrying capacity present-logistic
           # P(t+1) = P(t) + r*(1-P(t)/K)*P(t)
-          capacity1 <- ifelse(is.null(input$kSlider1), 1e10, input$kSlider1)
+          capacity1 <- ifelse(is.null(input$capacity1), 1e10, input$capacity1)
           for (i in 2:(input$obsPeriod + 1)) {
             changePop <- growthRate * detData[i - 1, "pop"] *
               (1 - (detData[i - 1, "pop"] / capacity1))
@@ -546,7 +530,7 @@ server <- function(input, output, session) {
       #### Add carrying capacity line 
       if (input$addK1) {
         g1 <- g1 + geom_hline(
-          yintercept = input$kSlider1,
+          yintercept = input$capacity1,
           linetype = "dashed",
           color = boastPalette[5],
           size = 1
@@ -554,7 +538,7 @@ server <- function(input, output, session) {
           annotate(
             geom = "text",
             x = 10,
-            y = 1.05 * input$kSlider1,
+            y = 1.05 * input$capacity1,
             label = "Carrying Capacity",
             color = boastPalette[5],
             size = 5
@@ -696,7 +680,7 @@ server <- function(input, output, session) {
         inputId = "abundance",
         label = "Resource abundance",
         # Min needs to be limited to ensure non-negative capacity
-        min = max(-1 * floor(0.9 * (input$kSlider2 / 50)), -50),
+        min = max(-1 * floor(0.9 * (input$capacity2 / 50)), -50),
         max = 50,
         step = 1,
         value = 0
@@ -728,7 +712,7 @@ server <- function(input, output, session) {
           inputId = "date2",
           label = "Start month",
           min = 1,
-          max = (input$obsPeriod - 6),
+          max = 18,
           step = 2,
           value = 1
         ),
@@ -746,6 +730,17 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(
+    eventExpr = input$obsPeriod,
+    handlerExpr = {
+      updateSliderInput(
+        session = session,
+        inputId = "date2",
+        max = (input$obsPeriod - 6)
+      )
+    }
+  )
+  
   ### Finite Capacity plot ----
   output$finCapPlot <- renderPlot({
     #### Make base data 
@@ -757,16 +752,16 @@ server <- function(input, output, session) {
       error = rnorm(
         n = (input$obsPeriod + 1),
         mean = 0,
-        sd = input$cv * input$kSlider2 / 500
+        sd = input$capacityVariation * input$capacity2 / 500
       ),
       # Create scale for seasonal trend for capacity
       scale = rep(
         x = ifelse(
-          test = input$cv == 0,
-          yes = runif(n = 1,min = 0.05 * input$kSlider2, max = 0.1 * input$kSlider2),
-          no = input$cv / 100 * input$kSlider2
+          test = input$capacityVariation == 0,
+          yes = runif(n = 1, min = 0.05 * input$capacity2, max = 0.1 * input$capacity2),
+          no = input$capacityVariation / 100 * input$capacity2
         ),
-        (input$obsPeriod + 1)
+        times = (input$obsPeriod + 1)
       )
     )
     graphTitle3 <- "Stochastic Finite Capacity Model" # Placeholder title
@@ -774,7 +769,7 @@ server <- function(input, output, session) {
     #### Create seasonal and stochastic capacity
     finCapData <- finCapData %>%
       dplyr::mutate(
-        capacity = floor(input$kSlider2 + 50 * ifelse(
+        capacity = floor(input$capacity2 + 50 * ifelse(
           test = is.null(input$abundance),
           yes = 0,
           no = input$abundance
@@ -922,7 +917,7 @@ server <- function(input, output, session) {
         title = graphTitle3
       ) +
       geom_hline(
-        yintercept = input$kSlider2,
+        yintercept = input$capacity2,
         linetype = "dashed",
         color = boastPalette[5],
         size = 1
@@ -954,7 +949,7 @@ server <- function(input, output, session) {
       stat = "function",
       fun = calcPop,
       args = list(
-        cap = input$kSlider2,
+        cap = input$capacity2,
         init = input$initPop,
         bRate = input$birthRate,
         dRate1 = input$deathRate,
