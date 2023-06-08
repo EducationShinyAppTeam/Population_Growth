@@ -18,7 +18,7 @@ calcPop <- function(cap, init, bRate, dRate1, dRate2, time, date) {
 }
 
 detPop <- function(init, bRate, dRate1, dRate2, date, time) {
-  if(is.null(date)) {
+  if (is.null(date)) {
     rate = bRate - dRate1
   } else {
     rate = ifelse(time <= date, bRate - dRate1, bRate - dRate2)
@@ -90,7 +90,7 @@ ui <- list(
           div(
             style = "text-align: center;",
             bsButton(
-              inputId = "start",
+              inputId = "goToExplore",
               label = "GO!",
               size = "large",
               icon = icon("bolt"),
@@ -111,7 +111,7 @@ ui <- list(
           citeApp(),
           br(),
           br(),
-          div(class = "updated", "Last Update: 7/1/2022 by NJH.")
+          div(class = "updated", "Last Update: 6/9/2023 by TM.")
           )
         ),
         ### Prerequisites Page ----
@@ -154,7 +154,7 @@ ui <- list(
           div(
             style = "text-align: center;",
             bsButton(
-              inputId = "go",
+              inputId = "goToExplore2",
               label = "GO!",
               size = "large",
               icon = icon("bolt"),
@@ -424,7 +424,7 @@ server <- function(input, output, session) {
   
   ## Go Buttons ----
   observeEvent(
-    eventExpr = input$go, 
+    eventExpr = input$goToExplore, 
     handlerExpr = {
       updateTabItems(
         session = session,
@@ -435,7 +435,7 @@ server <- function(input, output, session) {
   )
   
   observeEvent(
-    eventExpr = input$start, 
+    eventExpr = input$goToExplore2, 
     handlerExpr = {
       updateTabItems(
         session = session,
@@ -510,8 +510,8 @@ server <- function(input, output, session) {
       
       #### Create plot ----
       g1 <- ggplot(data = detData, mapping = aes(x = month, y = pop)) +
-        geom_point(size = 3, color = boastPalette[1]) +
-        geom_line(size = 1, color = boastPalette[1]) +
+        geom_point(linewidth = 3, color = boastPalette[1]) +
+        geom_line(linewidth = 1, color = boastPalette[1]) +
         labs(
           x = "Months since start",
           y = "Poplulation",
@@ -533,7 +533,7 @@ server <- function(input, output, session) {
           yintercept = input$capacity1,
           linetype = "dashed",
           color = boastPalette[5],
-          size = 1
+          lineligwidth = 1
         ) +
           annotate(
             geom = "text",
@@ -621,8 +621,8 @@ server <- function(input, output, session) {
         data = infCapData,
         mapping = aes(x = month, y = pop, color = "Stochastic")
       ) +
-        geom_point(size = 3) +
-        geom_line(size = 1) +
+        geom_point(linewidth = 3) +
+        geom_line(linewidth = 1) +
         labs(
           x = "Months since start",
           y = "Poplulation",
@@ -909,8 +909,8 @@ server <- function(input, output, session) {
       data = finCapData,
       mapping = aes(x = month, y = rabbit, color = "Rabbits")
     ) +
-      geom_point(size = 3) +
-      geom_path(size = 1) +
+      geom_point(linewidth = 3) +
+      geom_path(linewidth = 1) +
       labs(
         x = "Months since start",
         y = "Population",
@@ -920,7 +920,7 @@ server <- function(input, output, session) {
         yintercept = input$capacity2,
         linetype = "dashed",
         color = boastPalette[5],
-        size = 1
+        linewidth = 1
       ) +
       geom_point(mapping = aes(y = capacity, color = "Actual Capacity")) +
       geom_line(mapping = aes(y = capacity, color = "Actual Capacity")) +
@@ -959,20 +959,19 @@ server <- function(input, output, session) {
       mapping = aes(color = "Deterministic"),
       linetype = "dashed",
       inherit.aes = F,
-      size = 1
+      linewidth = 1
     )
     ##### Add Competition 
     if (input$addCompetition) {
       g3 <- g3 + geom_point(
         mapping = aes(y = hare, color = "Hares"),
-        size = 3
+        linewidth = 3
       ) +
         geom_line(
           mapping = aes(y = hare, color = "Hares"),
-          size = 1
+          linewidth = 1
         )
     }
-    
     g3
   },
   alt = "In this plot there is a dashed line for the theoretical carrying capacity
@@ -982,7 +981,6 @@ server <- function(input, output, session) {
   is greater than the death rate (i.e., growth rate is positive). A deterministic
   model may be added to highlight the presence of randomness in real life."
   )
-  
 }
 
 # Boast App Call ----
