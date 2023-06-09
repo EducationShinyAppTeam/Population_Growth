@@ -25,7 +25,6 @@ detPop <- function(init, bRate, dRate1, dRate2, date, time) {
   }
   floor(init * exp(rate * time))
 }
-
 wrapText <- function(txt, ...) {paste(strwrap(txt, ...), collapse = "\n")}
 
 # Define UI ----
@@ -34,7 +33,7 @@ ui <- list(
     skin = "green",
     ## Header ----
     dashboardHeader(
-      title = "Population Growth", 
+      title = "Population Growth Models", 
       titleWidth = 250,
       tags$li(class = "dropdown", actionLink("info", icon("info"))),
       tags$li(
@@ -72,9 +71,8 @@ ui <- list(
           withMathJax(),
           h1("Population Growth Models"),
           p("Explore how growth rate, carrying capacity, variation of the
-          population, density-independent limiting factors, and
-          density-dependent limiting factors, affects a simulated population of
-          rabbits."),
+          population, density-independent limiting factors, and density-dependent
+          limiting factors, affects a simulated population of rabbits."),
           h2("Instructions"),
           tags$ol(
             tags$li("Review any information in the Prerequisistes as needed."),
@@ -120,7 +118,7 @@ ui <- list(
           withMathJax(),
           h2("Prerequisites"),
           tags$ul(
-            tags$li("Population growth depends on the rate of births and how that
+            tags$li("Population growth depends on the rate of births and how it
                   compares to the death rate (the difference is called the
                   growth rate)."),
             tags$li("The exponential growth of a population results when the
@@ -141,7 +139,7 @@ ui <- list(
                   they will live under natural conditions, and whether they will
                   be affected by a disease. Further, the carrying capacity will
                   vary from time to time due to random fluctuations in the
-                  weather, in the development of food sources, seasonal effects,
+                  weather, development of food sources, seasonal effects,
                   and other types of impacts."),
             tags$li("Population growth in the face of stochasticity can be quite
                   different from the predictions that would be made by a
@@ -407,7 +405,6 @@ ui <- list(
 
 # Define server logic ----
 server <- function(input, output, session) {
-  
   ## Set up Info button ----
   observeEvent(
     eventExpr = input$info, 
@@ -452,10 +449,10 @@ server <- function(input, output, session) {
            round((input$birthRate - input$deathRate), 3)*100,
            "% per month, and we will observe the population for ", 
            input$obsPeriod, " months.")
-  }) 
+  })
   
   ## Deterministic Model ----
-  ### Carrying Capacity Slider ----
+  ### Carrying Capacity Slider----
   output$kControl <- renderUI({
     if (input$addK1) {
       sliderInput(
@@ -478,7 +475,7 @@ server <- function(input, output, session) {
         pop = rep(input$initPop, (input$obsPeriod + 1))
       )
       graphTitle1 <- "determinisitic model" # placeholder title
-      
+
       growthRate <- input$birthRate - input$deathRate
       
       #### Carrying capacity check/make data-logistic vs. geometric 
@@ -527,7 +524,7 @@ server <- function(input, output, session) {
           text = element_text(size = 18)
         )
       
-      #### Add carrying capacity line 
+      #### Add carrying capacity line ----
       if (input$addK1) {
         g1 <- g1 + geom_hline(
           yintercept = input$capacity1,
@@ -544,7 +541,6 @@ server <- function(input, output, session) {
             size = 5
           )
       }
-      
       g1
     },
     alt = "The plot shows the exponential growth of the population when the
@@ -595,7 +591,7 @@ server <- function(input, output, session) {
         modDeathRate1 <- input$deathRate
         graphTitle2 <- "Stochastic Population Growth"
       }
-      
+    
       #### Create stochastic data ----
       # N(t+1) = N(t) + F(t) - D(t), where
       # F(t) ~ Poi(birthRate*N(t)),
@@ -634,10 +630,7 @@ server <- function(input, output, session) {
           limits = c(0, NA)
         ) +
         theme_bw() +
-        theme(
-          text = element_text(size = 18),
-          legend.position = "bottom"
-        ) +
+        theme(text = element_text(size = 18), legend.position = "bottom") +
         scale_color_manual(
           name = "Models",
           values = c(
@@ -646,7 +639,7 @@ server <- function(input, output, session) {
           )
         )
       
-      #### Add estimated deterministic model 
+      #### Add estimated deterministic model----
       if (input$expMod) {
         g2 <- g2 + geom_line(
           stat = "function",
@@ -662,7 +655,6 @@ server <- function(input, output, session) {
           size = 1
         )
       }
-      
       g2
     },
     alt = "This plot will show the exponential growth of the rabbit population
@@ -895,7 +887,6 @@ server <- function(input, output, session) {
         )
       }
       
-      
       #### Negative value check 
       if (finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
       if (finCapData[i, "hare"] < 0) {finCapData[i, "hare"] <- 0}
@@ -930,10 +921,7 @@ server <- function(input, output, session) {
         limits = c(0, NA)
       ) +
       theme_bw() +
-      theme(
-        text = element_text(size = 18),
-        legend.position = "bottom"
-      ) +
+      theme(text = element_text(size = 18), legend.position = "bottom") +
       scale_color_manual(
         name = "Models",
         values = c(
@@ -944,7 +932,7 @@ server <- function(input, output, session) {
         )
       )
     
-    ##### Add deterministic model 
+    ##### Add deterministic model----
     g3 <- g3 + geom_line(
       stat = "function",
       fun = calcPop,
@@ -961,7 +949,7 @@ server <- function(input, output, session) {
       inherit.aes = F,
       linewidth = 1
     )
-    ##### Add Competition 
+    ##### Add Competition----
     if (input$addCompetition) {
       g3 <- g3 + geom_point(
         mapping = aes(y = hare, color = "Hares"),
