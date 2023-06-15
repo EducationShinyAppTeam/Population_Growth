@@ -353,46 +353,40 @@ ui <- list(
           p(
             class = "hangingindent",
             "Bailey, E. (2022). shinyBS: Twitter bootstrap components for shiny.
-            (v 0.61.1) [R package]. Available from
+            (v 0.61.1). [R package]. Available from
             https://CRAN.R-project.org/package=shinyBS"
           ),
           p(
             class = "hangingindent",
-            "Carey, R. and Hatfield, N. (2022). boastUtils: BOAST Utilities,
-            (v 0.1.12.4) [R Package]. Available from
-            https://github.com/EducationShinyAppTeam/boastUtils"
+            "Carey, R. and Hatfield, N.J. (2023). boastUtils: BOAST utilities. 
+            (v 0.1.12.4). [R Package]. Avaliable from 
+            https://github.com/EducationShinyappTeam/boastUtils"
           ),
           p(
             class = "hangingindent",
-            "Chang, W. and Borges Ribeio, B. (2021). shinydashboard: Create
-            dashboards with 'Shiny'. (v. 0.7.2) [R Package]. Available from
+            "Chang, W. and Borges Ribeio (2021). shinydashboard: Create dashboards
+            with 'Shiny.' (v 0.7.2). Avaliable from
             https://CRAN.R-project.org/package=shinydashboard"
           ),
           p(
             class = "hangingindent",
-            "Chang, W., Cheng, J., Allaire, J., Sievert, C., Schloerke, B., Xie,
-            Y., Allen, J., McPherson, J., Dipert, A., and Borges, B. (2021).
-            shiny: Web application framework for R. (v 1.7.1) [R Package].
-            Available from https://CRAN.R-project.org/package=shiny"
+            "Chang W, Cheng J, Allaire J, Sievert C, Schloerke B, Xie Y, Allen J, 
+            McPherson J, Dipert A, Borges B (2023). shiny: Web Application Framework 
+            for R. R package version 1.7.4.9002. Avaliable from 
+            https://CRAN.R-project.org/package=shiny"
           ),
           p(
             class = "hangingindent",
-            "Perrier, V., Meyer, F., and Granjon, D. (2022). shinyWidgets: Custom
-            inputs widgets for shiny. (v.0.7.0) [R Package]. Available from
-            https://CRAN.R-project.org/package=shinyWidgets"
+            "Perrier, V., Meyer, F., Granjon, D. (2023) shinyWidgets: Custom Input
+            Widgets for Shiny. (v0.7.6). Avaliable from 
+            https://cran.r-project.org/web/packages/shinyWidgets/index.html"
           ),
-        p(
-          class = "hangingindent",
-          "Wickham, H. (2016), ggplot2: Elegant graphics for data analysis.
-          (v 3.3.6) [R Package]. Springer-Verlag New York. Available from
-          https://ggplot2.tidyverse.org"
-        ),
-        p(
-          class = "hangingindent",
-          "Wickham, H., François, R., Henry, L., and Müller, K. (2022).
-          dplyr: A grammar of data manipulation. (v 1.0.9) [R Package].
-          Available from https://CRAN.R-project.org/package=dplyr"
-        ),
+          p(
+            class = "hangingindent",
+            "Wickham H (2016). ggplot2: Elegant Graphics for Data Analysis. 
+            Springer-Verlag New York. ISBN 978-3-319-24277-4. Avaliable from 
+            https://ggplot2.tidyverse.org."
+          ),
         br(),
         br(),
         br(),
