@@ -65,7 +65,7 @@ ui <- list(
     ## Body ----
     dashboardBody(
       tabItems(
-        ### Overview Page ----
+        ### Overview ----
         tabItem(
           tabName = "overview",
           withMathJax(),
@@ -76,7 +76,7 @@ ui <- list(
           h2("Instructions"),
           tags$ol(
             tags$li("Review any information in the Prerequisistes as needed."),
-            tags$li("When ready go to the Exploration Tab."),
+            tags$li("When ready go to the Explore Tab."),
             tags$li("Set the initial values for the rabbit population."),
             tags$li("Pick a model type to explore."),
             tags$li("Add/remove factors and move the sliders around to explore how
@@ -109,7 +109,7 @@ ui <- list(
           citeApp(),
           br(),
           br(),
-          div(class = "updated", "Last Update: 6/9/2023 by TM.")
+          div(class = "updated", "Last Update: 6/23/2023 by TM.")
           )
         ),
         ### Prerequisites Page ----
@@ -387,6 +387,12 @@ ui <- list(
             Springer-Verlag New York. ISBN 978-3-319-24277-4. Avaliable from 
             https://ggplot2.tidyverse.org."
           ),
+          p(
+            class = "hangingindent",
+            "Wickham, H., François, R., Henry, L., and Müller, K. (2022).
+            dplyr: A grammar of data manipulation. (v 1.0.9) [R Package].
+            Available from https://CRAN.R-project.org/package=dplyr"
+          ),
         br(),
         br(),
         br(),
@@ -399,7 +405,7 @@ ui <- list(
 
 # Define server logic ----
 server <- function(input, output, session) {
-  ## Set up Info button ----
+  ## Info button ----
   observeEvent(
     eventExpr = input$info, 
     handlerExpr = {
@@ -501,7 +507,7 @@ server <- function(input, output, session) {
       
       #### Create plot ----
       g1 <- ggplot(data = detData, mapping = aes(x = month, y = pop)) +
-        geom_point(linewidth = 3, color = boastPalette[1]) +
+        geom_point(size = 3, color = boastPalette[1]) +
         geom_line(linewidth = 1, color = boastPalette[1]) +
         labs(
           x = "Months since start",
@@ -524,7 +530,7 @@ server <- function(input, output, session) {
           yintercept = input$capacity1,
           linetype = "dashed",
           color = boastPalette[5],
-          lineligwidth = 1
+          linewidth = 1
         ) +
           annotate(
             geom = "text",
@@ -611,7 +617,7 @@ server <- function(input, output, session) {
         data = infCapData,
         mapping = aes(x = month, y = pop, color = "Stochastic")
       ) +
-        geom_point(linewidth = 3) +
+        geom_point(size = 3) +
         geom_line(linewidth = 1) +
         labs(
           x = "Months since start",
@@ -715,7 +721,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   observeEvent(
     eventExpr = input$obsPeriod,
     handlerExpr = {
@@ -894,7 +900,7 @@ server <- function(input, output, session) {
       data = finCapData,
       mapping = aes(x = month, y = rabbit, color = "Rabbits")
     ) +
-      geom_point(linewidth = 3) +
+      geom_point(size = 3) +
       geom_path(linewidth = 1) +
       labs(
         x = "Months since start",
@@ -947,7 +953,7 @@ server <- function(input, output, session) {
     if (input$addCompetition) {
       g3 <- g3 + geom_point(
         mapping = aes(y = hare, color = "Hares"),
-        linewidth = 3
+        size = 3
       ) +
         geom_line(
           mapping = aes(y = hare, color = "Hares"),
