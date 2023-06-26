@@ -101,7 +101,7 @@ ui <- list(
           p("This app was originally developed and coded by Yutong Wu. We would
           like to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
           Sciences for his advice and assistance for the biological content. The
-          current version of the app was modified by Neil J. Hatfield.",
+          current version of the app was modified by Taryn McHugh.",
           br(),
           br(),
           "Cite this app as:",
@@ -109,7 +109,7 @@ ui <- list(
           citeApp(),
           br(),
           br(),
-          div(class = "updated", "Last Update: 6/23/2023 by TM.")
+          div(class = "updated", "Last Update: 6/25/2023 by TM.")
           )
         ),
         ### Prerequisites Page ----
