@@ -2,4 +2,4 @@
 1.
 
 # Ideas for Future Development
-- 
+- Adjust long alt text to use aria labels

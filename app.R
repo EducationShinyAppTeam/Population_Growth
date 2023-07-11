@@ -25,6 +25,7 @@ detPop <- function(init, bRate, dRate1, dRate2, date, time) {
   }
   floor(init * exp(rate * time))
 }
+
 wrapText <- function(txt, ...) {paste(strwrap(txt, ...), collapse = "\n")}
 
 # Define UI ----
@@ -52,7 +53,7 @@ ui <- list(
       width = 250,
       sidebarMenu(
         id = "pages",
-        menuItem("Overview", tabName = "overview", icon = icon("tachometer-alt")),
+        menuItem("Overview", tabName = "overview", icon = icon("gauge-high")),
         menuItem("Prerequisites", tabName = "prerequisites", icon = icon("book")),
         menuItem("Explore", tabName = "explore", icon = icon("wpexplorer")),
         menuItem("References", tabName = "references", icon = icon("leanpub"))
@@ -98,10 +99,10 @@ ui <- list(
           br(),
           br(),
           h2("Acknowledgements"),
-          p("This app was originally developed and coded by Yutong Wu. We would
-          like to thank Dr. Stephen Schaeffer from the Huck Institutes of Life
-          Sciences for his advice and assistance for the biological content. The
-          current version of the app was modified by Taryn McHugh.",
+          p("This app was originally developed and coded by Yutong Wu in 2019 with
+            the support of Dr. Stephen Schaeffer from the Huck Institutes of Life
+          Sciences. We thank Dr. Schaeffer for his advice and assistance. The
+          current version of the app was modified by Taryn McHugh and Neil Hatfield.",
           br(),
           br(),
           "Cite this app as:",
@@ -117,17 +118,22 @@ ui <- list(
           tabName = "prerequisites",
           withMathJax(),
           h2("Prerequisites"),
+          p("Please review the following information to get the most out of the
+            app."),
           tags$ul(
-            tags$li("Population growth depends on the rate of births and how it
-                  compares to the death rate (the difference is called the
-                  growth rate)."),
+            tags$li("Population growth depends on the number of births (i.e.,
+                    the birth rate) and number of deaths (i.e., the death rate) 
+                    in the population. The difference between the birth rate and
+                    the death rate is (birth - death) is referred to as the 
+                    growth rate."),
             tags$li("The exponential growth of a population results when the
                   growth rate is positive; the population faces exponential decay
                   when the growth rate is negative."),
             tags$li("When there is a finite carrying capacity (i.e., an upper bound
                   on how many members the environment can support), the
-                  exponential growth changes to logistic growth. This appears as
-                  an S-shaped curve."),
+                  exponential growth changes to logistic growth. This makes the 
+                  graph of the population size over time appears as an S-shaped
+                  curve."),
             tags$li('In this app, we see how random fluctuations or "stochasticity"
                   affects population growth in both the finite and "infinite"
                   capacity situations.'),
@@ -146,24 +152,14 @@ ui <- list(
                   deterministic model. This is especially true with small
                   populations since a few extra deaths or a few less births
                   happening randomly might wipe out a population altogether.")
-          ),
-          br(),
-          br(),
-          div(
-            style = "text-align: center;",
-            bsButton(
-              inputId = "goToExplore2",
-              label = "GO!",
-              size = "large",
-              icon = icon("bolt"),
-              style = "default"
-            )
           )
         ),
         ### Explore Page ----
         tabItem(
           tabName = "explore",
           h2("Modeling Rabbit Population Growth"),
+          p("Follow the listed steps to explore the impacts of your choices on 
+            the growth of a population of rabbits."),
           br(),
           h3("Step 1: Set Initial Values for the Population"),
           fluidRow(
@@ -409,12 +405,34 @@ server <- function(input, output, session) {
   observeEvent(
     eventExpr = input$info, 
     handlerExpr = {
+      messageList <- switch(
+        EXPR = input$pages,
+        overview = list(
+          title = "Pop. Growth Models",
+          text = "This app allows you to explore different population growth models.
+          Use the left-hand menu to navigate through the app."
+        ),
+        prerequisites = list(
+          title = "Pop. Growth Models",
+          text = "Once you've reviewed the prerequisites, click on Explore."
+        ),
+        explore = list(
+          title = "Instructions",
+          text = "Move the sliders to explore how different factors affect the 
+          rabbit population growth."
+        ),
+        list(
+          title = "Pop. Growth Models",
+          text = "This app allows you to explore different population growth models.
+          Use the left-hand menu to navigate through the app."
+        )
+      )
+
       sendSweetAlert(
         session = session,
-        title = "Instructions",
-        text = "Move the sliders to explore how different factors affect the
-      rabbit population growth.",
-      type = "info"
+        title = messageList$title,
+        text = messageList$text,
+        type = "info"
       )
     }
   )
@@ -431,39 +449,32 @@ server <- function(input, output, session) {
     }
   )
   
-  observeEvent(
-    eventExpr = input$goToExplore2, 
-    handlerExpr = {
-      updateTabItems(
-        session = session,
-        inputId = "pages", 
-        selected = "explore"
-      )
+  ## Summary sentence for initial population settings ----
+  output$initSummary <- renderText(
+    expr = {
+      paste0("We are starting with a grassland environment with ", input$initPop, 
+             " rabbits. The growth rate (birth rate - death rate) is ", 
+             round((input$birthRate - input$deathRate), 3)*100,
+             "% per month, and we will observe the population for ", 
+             input$obsPeriod, " months.")
     }
   )
   
-  ## Summary sentence for initial population settings ----
-  output$initSummary <- renderText({
-    paste0("We are starting with a grassland environment with ", input$initPop,
-           " rabbits. The growth rate (birth rate - death rate) is ", 
-           round((input$birthRate - input$deathRate), 3)*100,
-           "% per month, and we will observe the population for ", 
-           input$obsPeriod, " months.")
-  })
-  
   ## Deterministic Model ----
   ### Carrying Capacity Slider----
-  output$kControl <- renderUI({
-    if (input$addK1) {
-      sliderInput(
-        inputId = "capacity1",
-        label = "Carrying capacity",
-        min = 500,
-        max = 9000,
-        value = 1000
-      )
+  output$kControl <- renderUI(
+    expr = {
+      if (input$addK1) {
+        sliderInput(
+          inputId = "capacity1",
+          label = "Carrying capacity",
+          min = 500,
+          max = 9000,
+          value = 1000
+        )
+      }
     }
-  })
+  )
   
   ### Deterministic plot ----
   #### uses Geometric and Logistic 
@@ -475,7 +486,7 @@ server <- function(input, output, session) {
         pop = rep(input$initPop, (input$obsPeriod + 1))
       )
       graphTitle1 <- "determinisitic model" # placeholder title
-
+      
       growthRate <- input$birthRate - input$deathRate
       
       #### Carrying capacity check/make data-logistic vs. geometric 
@@ -550,28 +561,30 @@ server <- function(input, output, session) {
   
   ## Infinite Capacity Model ----
   ### Disease Sliders ----
-  output$diseaseSlider1 <- renderUI({
-    if (input$addDisease1) {
-      list(
-        sliderInput(
-          inputId = "date1",
-          label = "Start month",
-          min = 1,
-          max = (input$obsPeriod - 6),
-          value = 1,
-          step = 1
-        ),
-        sliderInput(
-          inputId = "disease1",
-          label = "Disease severity",
-          min = 0,
-          max = 50,
-          value = 0,
-          step = 1,
-          post = "%")
-      )
+  output$diseaseSlider1 <- renderUI(
+    expr = {
+      if (input$addDisease1) {
+        list(
+          sliderInput(
+            inputId = "date1",
+            label = "Start month",
+            min = 1,
+            max = (input$obsPeriod - 6),
+            value = 1,
+            step = 1
+          ),
+          sliderInput(
+            inputId = "disease1",
+            label = "Disease severity",
+            min = 0,
+            max = 50,
+            value = 0,
+            step = 1,
+            post = "%")
+        )
+      }
     }
-  })
+  )
   
   ### Infinite Capacity plot ----
   output$infCapPlot <- renderPlot(
@@ -591,7 +604,7 @@ server <- function(input, output, session) {
         modDeathRate1 <- input$deathRate
         graphTitle2 <- "Stochastic Population Growth"
       }
-    
+      
       #### Create stochastic data ----
       # N(t+1) = N(t) + F(t) - D(t), where
       # F(t) ~ Poi(birthRate*N(t)),
@@ -652,7 +665,7 @@ server <- function(input, output, session) {
           mapping = aes(color = "Deterministic"),
           linetype = "dashed",
           inherit.aes = F,
-          size = 1
+          linewidth = 1
         )
       }
       g2
@@ -666,62 +679,68 @@ server <- function(input, output, session) {
   
   ## Finite Capacity Model ----
   ### Extra Sliders ----
-  output$resourceSlider <- renderUI({
-    if (input$addResource) {
-      sliderInput(
-        inputId = "abundance",
-        label = "Resource abundance",
-        # Min needs to be limited to ensure non-negative capacity
-        min = max(-1 * floor(0.9 * (input$capacity2 / 50)), -50),
-        max = 50,
-        step = 1,
-        value = 0
-      )
-    }
-  })
-  
-  output$competitionSlider <- renderUI({
-    if (input$addCompetition) {
-      list(
+  output$resourceSlider <- renderUI(
+    expr = {
+      if (input$addResource) {
         sliderInput(
-          inputId = "competition",
-          label = "Competitor's growth rate",
-          min = -0.5,
-          max = 0.5,
-          step = 0.05,
-          value = 0
-        ),
-        p("The hares (i.e., the competitors) start with the same initial population
-          and birth rate as the rabbits.")
-      )
-    }
-  })
-  
-  output$diseaseSlider2 <- renderUI({
-    if (input$addDisease2) {
-      list(
-        sliderInput(
-          inputId = "date2",
-          label = "Start month",
-          min = 1,
-          max = 18,
-          step = 2,
-          value = 1
-        ),
-        sliderInput(
-          inputId = "disease2",
-          label = "Disease severity",
-          min = 0,
+          inputId = "abundance",
+          label = "Resource abundance",
+          # Min needs to be limited to ensure non-negative capacity
+          min = max(-1 * floor(0.9 * (input$capacity2 / 50)), -50),
           max = 50,
           step = 1,
-          value = 0,
-          post = "%"
-        ),
-        p("The disease only affects the rabbits, not the hares.")
-      )
+          value = 0
+        )
+      }
     }
-  })
-
+  )
+  
+  output$competitionSlider <- renderUI(
+    expr = {
+      if (input$addCompetition) {
+        list(
+          sliderInput(
+            inputId = "competition",
+            label = "Competitor's growth rate",
+            min = -0.5,
+            max = 0.5,
+            step = 0.05,
+            value = 0
+          ),
+          p("The hares (i.e., the competitors) start with the same initial population
+          and birth rate as the rabbits.")
+        )
+      }
+    }
+  )
+  
+  output$diseaseSlider2 <- renderUI(
+    expr = {
+      if (input$addDisease2) {
+        list(
+          sliderInput(
+            inputId = "date2",
+            label = "Start month",
+            min = 1,
+            max = 18,
+            step = 2,
+            value = 1
+          ),
+          sliderInput(
+            inputId = "disease2",
+            label = "Disease severity",
+            min = 0,
+            max = 50,
+            step = 1,
+            value = 0,
+            post = "%"
+          ),
+          p("The disease only affects the rabbits, not the hares.")
+        )
+      }
+    }
+  )
+  
   observeEvent(
     eventExpr = input$obsPeriod,
     handlerExpr = {
@@ -734,235 +753,236 @@ server <- function(input, output, session) {
   )
   
   ### Finite Capacity plot ----
-  output$finCapPlot <- renderPlot({
-    #### Make base data 
-    finCapData <- data.frame(
-      month = 1:(input$obsPeriod + 1),
-      rabbit = rep(input$initPop, (input$obsPeriod + 1)),
-      hare = rep(input$initPop, (input$obsPeriod + 1)),
-      # Create noise for capacity
-      error = rnorm(
-        n = (input$obsPeriod + 1),
-        mean = 0,
-        sd = input$capacityVariation * input$capacity2 / 500
-      ),
-      # Create scale for seasonal trend for capacity
-      scale = rep(
-        x = ifelse(
-          test = input$capacityVariation == 0,
-          yes = runif(n = 1, min = 0.05 * input$capacity2, max = 0.1 * input$capacity2),
-          no = input$capacityVariation / 100 * input$capacity2
+  output$finCapPlot <- renderPlot(
+    expr = {
+      #### Make base data 
+      finCapData <- data.frame(
+        month = 1:(input$obsPeriod + 1),
+        rabbit = rep(input$initPop, (input$obsPeriod + 1)),
+        hare = rep(input$initPop, (input$obsPeriod + 1)),
+        # Create noise for capacity
+        error = rnorm(
+          n = (input$obsPeriod + 1),
+          mean = 0,
+          sd = input$capacityVariation * input$capacity2 / 500
         ),
-        times = (input$obsPeriod + 1)
-      )
-    )
-    graphTitle3 <- "Stochastic Finite Capacity Model" # Placeholder title
-    
-    #### Create seasonal and stochastic capacity
-    finCapData <- finCapData %>%
-      dplyr::mutate(
-        capacity = floor(input$capacity2 + 50 * ifelse(
-          test = is.null(input$abundance),
-          yes = 0,
-          no = input$abundance
-        ) + scale * sin(month * pi / 6) + error
+        # Create scale for seasonal trend for capacity
+        scale = rep(
+          x = ifelse(
+            test = input$capacityVariation == 0,
+            yes = runif(n = 1, min = 0.05 * input$capacity2, max = 0.1 * input$capacity2),
+            no = input$capacityVariation / 100 * input$capacity2
+          ),
+          times = (input$obsPeriod + 1)
         )
       )
-    
-    #### Check for disease
-    if (input$addDisease2) {
-      modDeathRate2 <- input$deathRate + 0.005 * ifelse(
-        test = is.null(input$disease2),
-        yes = 0,
-        no = input$disease2
-      )
-    } else {
-      modDeathRate2 <- input$deathRate
-    }
-    
-    #### Hare Death Rate
-    if (input$addCompetition) {
-      hareDeath <- ifelse(
-        test = is.null(input$competition),
-        yes = input$deathRate,
-        no = input$birthRate - input$competition
-      )
-    } else {
-      hareDeath <- input$deathRate
-    }
-    
-    #### Create and adjust populations ----
-    for (i in 2:(input$obsPeriod + 1)) {
-      ##### Rabbits 
-      finCapData[i, "rabbit"] <- (calcPop(
-        cap = finCapData[i, "capacity"],
-        init = input$initPop,
-        bRate = input$birthRate,
-        dRate1 = input$deathRate,
-        dRate2 = modDeathRate2,
-        date = input$date2,
-        time = finCapData[i, "month"]
-      ) +
-        rpois(n = 1, lambda = finCapData[i - 1, "rabbit"] * input$birthRate) -
-        rpois(n = 1, lambda = finCapData[i - 1, "rabbit"] *
-                ifelse(
-                  test = i <= input$date2 || is.null(input$date2),
-                  yes = input$deathRate,
-                  no = modDeathRate2
-                )
-        )
-      )
+      graphTitle3 <- "Stochastic Finite Capacity Model" # Placeholder title
       
-      if (finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
-      
-      ##### Hares 
-      finCapData[i, "hare"] <- (calcPop(
-        cap = finCapData[i, "capacity"],
-        init = ifelse(
-          test = !(input$addCompetition),
-          yes = 0,
-          no = input$initPop
-        ),
-        bRate = ifelse(
-          test = is.null(input$competition),
-          yes = 0,
-          no = input$birthRate
-        ),
-        dRate1 = ifelse(
-          test = is.null(input$competition),
-          yes = 0,
-          no = (input$birthRate - input$competition)
-        ),
-        dRate2 = ifelse(
-          test = is.null(input$competition),
-          yes = 0,
-          no = (input$birthRate - input$competition)
-        ),
-        date = 0,
-        time = finCapData[i, "month"]) + ifelse(
-          test = input$addCompetition,
-          yes = rpois(n = 1, lambda = finCapData[i - 1, "hare"] * input$birthRate),
-          no = 0
-        ) - ifelse(
-          test = input$addCompetition,
-          yes = rpois(n = 1, lambda = finCapData[i - 1, "hare"] * hareDeath),
-          no = 0
-        )
-      )
-      
-      if (finCapData[i, "hare"] < 0 || is.na(finCapData[i, "hare"])) {
-        finCapData[i, "hare"] <- 0
-      }
-      
-      #### First Capacity Check 
-      if (finCapData[i, "rabbit"] + finCapData[i, "hare"] >
-          finCapData[i, "capacity"]) {
-        finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
-          ifelse(
-            test = finCapData[i, "hare"] <= 10,
-            yes = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]),
-            no = ceiling((finCapData[i, "rabbit"] +
-                            finCapData[i, "hare"] - finCapData[i, "capacity"]) / 2)
+      #### Create seasonal and stochastic capacity
+      finCapData <- finCapData %>%
+        dplyr::mutate(
+          capacity = floor(input$capacity2 + 50 * ifelse(
+            test = is.null(input$abundance),
+            yes = 0,
+            no = input$abundance
+          ) + scale * sin(month * pi / 6) + error
           )
-        finCapData[i, "hare"] <- finCapData[i, "hare"] - ifelse(
-          test = finCapData[i, "hare"] == 0,
+        )
+      
+      #### Check for disease
+      if (input$addDisease2) {
+        modDeathRate2 <- input$deathRate + 0.005 * ifelse(
+          test = is.null(input$disease2),
           yes = 0,
-          no = floor((finCapData[i, "rabbit"] + finCapData[i, "hare"] -
-                        finCapData[i, "capacity"]) / 2)
+          no = input$disease2
         )
+      } else {
+        modDeathRate2 <- input$deathRate
       }
       
-      #### Secondary capacity check 
-      #### Populations tend to "run away", ignoring capacity
-      if (finCapData[i, "hare"] > finCapData[i, "capacity"]) {
-        finCapData[i, "hare"] <- finCapData[i, "hare"] - 
-          runif(n = 1, min = 0.75, max = 1.2) *
-          (finCapData[i, "hare"] - finCapData[i, "capacity"])
-      }
-      if (finCapData[i, "rabbit"] > finCapData[i, "capacity"]) {
-        finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] - rpois(
-          n = 1,
-          lambda = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]) *
-            input$deathRate * runif(n = 1, min = 2, max = 4)
+      #### Hare Death Rate
+      if (input$addCompetition) {
+        hareDeath <- ifelse(
+          test = is.null(input$competition),
+          yes = input$deathRate,
+          no = input$birthRate - input$competition
         )
+      } else {
+        hareDeath <- input$deathRate
       }
       
-      #### Negative value check 
-      if (finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
-      if (finCapData[i, "hare"] < 0) {finCapData[i, "hare"] <- 0}
-    }
-    if (!(input$addCompetition)) {finCapData[1, "hare"] <- 0}
-    
-    finCapData$month <- finCapData$month - 1
-    
-    #### Create plot ----
-    g3 <- ggplot(
-      data = finCapData,
-      mapping = aes(x = month, y = rabbit, color = "Rabbits")
-    ) +
-      geom_point(size = 3) +
-      geom_path(linewidth = 1) +
-      labs(
-        x = "Months since start",
-        y = "Population",
-        title = graphTitle3
-      ) +
-      geom_hline(
-        yintercept = input$capacity2,
-        linetype = "dashed",
-        color = boastPalette[5],
-        linewidth = 1
-      ) +
-      geom_point(mapping = aes(y = capacity, color = "Actual Capacity")) +
-      geom_line(mapping = aes(y = capacity, color = "Actual Capacity")) +
-      scale_x_continuous(expand = expansion(mult = 0, add = c(0, 1.1))) +
-      scale_y_continuous(
-        expand = expansion(mult = c(0, 0.1), add = 0),
-        limits = c(0, NA)
-      ) +
-      theme_bw() +
-      theme(text = element_text(size = 18), legend.position = "bottom") +
-      scale_color_manual(
-        name = "Models",
-        values = c(
-          "Rabbits" = boastPalette[1],
-          "Actual Capacity" = boastPalette[5],
-          "Deterministic" = boastPalette[2],
-          "Hares" = boastPalette[3]
+      #### Create and adjust populations ----
+      for (i in 2:(input$obsPeriod + 1)) {
+        ##### Rabbits 
+        finCapData[i, "rabbit"] <- (calcPop(
+          cap = finCapData[i, "capacity"],
+          init = input$initPop,
+          bRate = input$birthRate,
+          dRate1 = input$deathRate,
+          dRate2 = modDeathRate2,
+          date = input$date2,
+          time = finCapData[i, "month"]
+        ) +
+          rpois(n = 1, lambda = finCapData[i - 1, "rabbit"] * input$birthRate) -
+          rpois(n = 1, lambda = finCapData[i - 1, "rabbit"] *
+                  ifelse(
+                    test = i <= input$date2 || is.null(input$date2),
+                    yes = input$deathRate,
+                    no = modDeathRate2
+                  )
+          )
         )
-      )
-    
-    ##### Add deterministic model----
-    g3 <- g3 + geom_line(
-      stat = "function",
-      fun = calcPop,
-      args = list(
-        cap = input$capacity2,
-        init = input$initPop,
-        bRate = input$birthRate,
-        dRate1 = input$deathRate,
-        dRate2 = modDeathRate2,
-        date = input$date2
-      ),
-      mapping = aes(color = "Deterministic"),
-      linetype = "dashed",
-      inherit.aes = F,
-      linewidth = 1
-    )
-    ##### Add Competition----
-    if (input$addCompetition) {
-      g3 <- g3 + geom_point(
-        mapping = aes(y = hare, color = "Hares"),
-        size = 3
+        
+        if (finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
+        
+        ##### Hares 
+        finCapData[i, "hare"] <- (calcPop(
+          cap = finCapData[i, "capacity"],
+          init = ifelse(
+            test = !(input$addCompetition),
+            yes = 0,
+            no = input$initPop
+          ),
+          bRate = ifelse(
+            test = is.null(input$competition),
+            yes = 0,
+            no = input$birthRate
+          ),
+          dRate1 = ifelse(
+            test = is.null(input$competition),
+            yes = 0,
+            no = (input$birthRate - input$competition)
+          ),
+          dRate2 = ifelse(
+            test = is.null(input$competition),
+            yes = 0,
+            no = (input$birthRate - input$competition)
+          ),
+          date = 0,
+          time = finCapData[i, "month"]) + ifelse(
+            test = input$addCompetition,
+            yes = rpois(n = 1, lambda = finCapData[i - 1, "hare"] * input$birthRate),
+            no = 0
+          ) - ifelse(
+            test = input$addCompetition,
+            yes = rpois(n = 1, lambda = finCapData[i - 1, "hare"] * hareDeath),
+            no = 0
+          )
+        )
+        
+        if (finCapData[i, "hare"] < 0 || is.na(finCapData[i, "hare"])) {
+          finCapData[i, "hare"] <- 0
+        }
+        
+        #### First Capacity Check 
+        if (finCapData[i, "rabbit"] + finCapData[i, "hare"] >
+            finCapData[i, "capacity"]) {
+          finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] -
+            ifelse(
+              test = finCapData[i, "hare"] <= 10,
+              yes = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]),
+              no = ceiling((finCapData[i, "rabbit"] +
+                              finCapData[i, "hare"] - finCapData[i, "capacity"]) / 2)
+            )
+          finCapData[i, "hare"] <- finCapData[i, "hare"] - ifelse(
+            test = finCapData[i, "hare"] == 0,
+            yes = 0,
+            no = floor((finCapData[i, "rabbit"] + finCapData[i, "hare"] -
+                          finCapData[i, "capacity"]) / 2)
+          )
+        }
+        
+        #### Secondary capacity check 
+        #### Populations tend to "run away", ignoring capacity
+        if (finCapData[i, "hare"] > finCapData[i, "capacity"]) {
+          finCapData[i, "hare"] <- finCapData[i, "hare"] - 
+            runif(n = 1, min = 0.75, max = 1.2) *
+            (finCapData[i, "hare"] - finCapData[i, "capacity"])
+        }
+        if (finCapData[i, "rabbit"] > finCapData[i, "capacity"]) {
+          finCapData[i, "rabbit"] <- finCapData[i, "rabbit"] - rpois(
+            n = 1,
+            lambda = (finCapData[i, "rabbit"] - finCapData[i, "capacity"]) *
+              input$deathRate * runif(n = 1, min = 2, max = 4)
+          )
+        }
+        
+        #### Negative value check 
+        if (finCapData[i, "rabbit"] < 0) {finCapData[i, "rabbit"] <- 0}
+        if (finCapData[i, "hare"] < 0) {finCapData[i, "hare"] <- 0}
+      }
+      if (!(input$addCompetition)) {finCapData[1, "hare"] <- 0}
+      
+      finCapData$month <- finCapData$month - 1
+      
+      #### Create plot ----
+      g3 <- ggplot(
+        data = finCapData,
+        mapping = aes(x = month, y = rabbit, color = "Rabbits")
       ) +
-        geom_line(
-          mapping = aes(y = hare, color = "Hares"),
+        geom_point(size = 3) +
+        geom_path(linewidth = 1) +
+        labs(
+          x = "Months since start",
+          y = "Population",
+          title = graphTitle3
+        ) +
+        geom_hline(
+          yintercept = input$capacity2,
+          linetype = "dashed",
+          color = boastPalette[5],
           linewidth = 1
+        ) +
+        geom_point(mapping = aes(y = capacity, color = "Actual Capacity")) +
+        geom_line(mapping = aes(y = capacity, color = "Actual Capacity")) +
+        scale_x_continuous(expand = expansion(mult = 0, add = c(0, 1.1))) +
+        scale_y_continuous(
+          expand = expansion(mult = c(0, 0.1), add = 0),
+          limits = c(0, NA)
+        ) +
+        theme_bw() +
+        theme(text = element_text(size = 18), legend.position = "bottom") +
+        scale_color_manual(
+          name = "Models",
+          values = c(
+            "Rabbits" = boastPalette[1],
+            "Actual Capacity" = boastPalette[5],
+            "Deterministic" = boastPalette[2],
+            "Hares" = boastPalette[3]
+          )
         )
-    }
-    g3
-  },
-  alt = "In this plot there is a dashed line for the theoretical carrying capacity
+      
+      ##### Add deterministic model----
+      g3 <- g3 + geom_line(
+        stat = "function",
+        fun = calcPop,
+        args = list(
+          cap = input$capacity2,
+          init = input$initPop,
+          bRate = input$birthRate,
+          dRate1 = input$deathRate,
+          dRate2 = modDeathRate2,
+          date = input$date2
+        ),
+        mapping = aes(color = "Deterministic"),
+        linetype = "dashed",
+        inherit.aes = F,
+        linewidth = 1
+      )
+      ##### Add Competition----
+      if (input$addCompetition) {
+        g3 <- g3 + geom_point(
+          mapping = aes(y = hare, color = "Hares"),
+          size = 3
+        ) +
+          geom_line(
+            mapping = aes(y = hare, color = "Hares"),
+            linewidth = 1
+          )
+      }
+      g3
+    },
+    alt = "In this plot there is a dashed line for the theoretical carrying capacity
   but also a line showing an actual carrying capacity that has a yearly seasonal
   trend and randomness. The plots for the rabbits and hares (the competition) are
   both logistic (s-curves), increasing towards the capacity, when the birth rate

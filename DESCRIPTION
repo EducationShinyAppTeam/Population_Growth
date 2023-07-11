@@ -1,14 +1,13 @@
 Title: Population Growth Models
 ShortName: Population Growth
-Date: 2019-08-01
-Lifecycle: experimental
+Date: 2023-07-11
+Lifecycle: maturing
 Authors@R: c(
     person(given = "Yutong", family = "Wu", role = c("aut", "cre")),
     person(given = "Stephen", family = "Schaeffer", role = c("fnd")),
     person(given = "Dennis", family = "Pearl", role = c("aut")),
     person(given = "Neil", family = "Hatfield", email = "neil.hatfield@psu.edu", role = c("aut")),
-    person(given = "Taryn", family = "McHugh", role = c("ctb")
-    )
+    person(given = "Taryn", family = "McHugh", role = c("ctb"))
   )
 Chapter: Biology 
 Description: This app explores how growth rate, carrying capacity, density-independent limiting factors, and density-dependent limiting factors, affects the growth and variability of a hypothetical population of rabbits.
